@@ -26,10 +26,10 @@ class Addiction
     private ?string $name = null;
 
     #[ORM\Column]
-    private ?int $quantity = null;
+    private int $quantity = 0;
 
     #[ORM\Column]
-    private ?float $totalAmount = null;
+    private float $totalAmount = 0;
 
     #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'addictions')]
     #[ORM\JoinColumn(nullable: false)]
@@ -45,6 +45,8 @@ class Addiction
     {
         $this->id = Uuid::v7();
         $this->triggers = new ArrayCollection();
+        $this->quantity = 0;
+        $this->totalAmount = 0.0;
     }
 
     public function getId(): ?string
