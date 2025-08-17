@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
+use ApiPlatform\Metadata\ApiResource;
+use App\Entity\Trait\TimestampableTrait;
+use App\Repository\AddictionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -10,24 +12,32 @@ use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Validator\Constraints\Uuid;
 
-#[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\Entity(repositoryClass: AddictionRepository::class)]
+#[ApiResource(mercure: true)]
 #[ORM\HasLifecycleCallbacks]
-class User
+class Trigger
 {
+    use TimestampableTrait;
+
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     private ?Uuid $id;
 
-    #[ORM\Column(length: 180, unique: true)]
-    private ?string $email = null;
+    #[ORM\Column(length: 255)]
+    private ?string $type = null;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Addiction::class, orphanRemoval: true)]
+    /**
+     * @var Collection<int, Addiction>
+     */
+    #[ORM\ManyToMany(targetEntity: Addiction::class, inversedBy: 'triggers')]
+    #[ORM\JoinTable(name: 'trigger_addictions')]
     private Collection $addictions;
 
     public function __construct()
     {
+        $this->id = Uuid::v4();
         $this->addictions = new ArrayCollection();
     }
 
@@ -36,14 +46,14 @@ class User
         return $this->id;
     }
 
-    public function getEmail(): ?string
+    public function getType(): ?string
     {
-        return $this->email;
+        return $this->type;
     }
 
-    public function setEmail(string $email): static
+    public function setType(string $type): static
     {
-        $this->email = $email;
+        $this->type = $type;
 
         return $this;
     }
@@ -60,7 +70,7 @@ class User
     {
         if (!$this->addictions->contains($addiction)) {
             $this->addictions->add($addiction);
-            $addiction->setUser($this);
+            $addiction->addTrigger($this);
         }
 
         return $this;
@@ -69,9 +79,7 @@ class User
     public function removeAddiction(Addiction $addiction): static
     {
         if ($this->addictions->removeElement($addiction)) {
-            if ($addiction->getUser() === $this) {
-                $addiction->setUser(null);
-            }
+            $addiction->removeTrigger($this);
         }
 
         return $this;
