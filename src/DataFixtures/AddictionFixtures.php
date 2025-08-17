@@ -38,6 +38,7 @@ class AddictionFixtures extends BaseFixtures implements DependentFixtureInterfac
                 $addiction->addTrigger($this->getReference('TRIGGER_0'));
             }
 
+            $this->addReference('ADDICTION_'.$i, $addiction);
             $manager->persist($addiction);
         }
 

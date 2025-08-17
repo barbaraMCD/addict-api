@@ -2,16 +2,16 @@
 
 namespace App\Enum;
 
-enum AddictionEnumType
+enum AddictionEnumType: string
 {
-    public const SUGAR = 'Sugar';
-    public const CAFFEINE = 'Caffeine';
-    public const GAMBLING = 'Gambling';
-    public const VIDEO_GAMES = 'Video games';
-    public const FASTFOOD = 'Fastfood';
-    public const CIGARETTES = 'Cigarettes';
-    public const ALCOHOL = 'Alcohol';
-    public const CANNABIS = 'Cannabis';
-    public const CLOTHES = 'Clothes';
-    public const HARD_DRUGS = 'Hard drugs';
+    case SUGAR = 'Sugar';
+    case CAFFEINE = 'Caffeine';
+    case GAMBLING = 'Gambling';
+    case VIDEO_GAMES = 'Video games';
+    case FASTFOOD = 'Fastfood';
+    case CIGARETTES = 'Cigarettes';
+    case ALCOHOL = 'Alcohol';
+    case CANNABIS = 'Cannabis';
+    case CLOTHES = 'Clothes';
+    case HARD_DRUGS = 'Hard drugs';
 }
