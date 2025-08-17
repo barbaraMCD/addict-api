@@ -10,7 +10,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\Validator\Constraints\Uuid;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AddictionRepository::class)]
 #[ApiResource(mercure: true)]
@@ -37,7 +37,7 @@ class Trigger
 
     public function __construct()
     {
-        $this->id = Uuid::v4();
+        $this->id = Uuid::v7();
         $this->addictions = new ArrayCollection();
     }
 

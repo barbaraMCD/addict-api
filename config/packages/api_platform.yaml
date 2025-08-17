@@ -3,6 +3,7 @@ api_platform:
     version: 1.0.0
     # Mercure integration, remove if unwanted
     mercure:
+        enabled: false
         include_type: true
     formats:
         jsonld: ['application/ld+json']

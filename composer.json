@@ -18,7 +18,6 @@
         "symfony/expression-language": "6.4.*",
         "symfony/flex": "^2.2",
         "symfony/framework-bundle": "6.4.*",
-        "symfony/mercure-bundle": "^0.3.5",
         "symfony/monolog-bundle": "^3.8",
         "symfony/property-access": "6.4.*",
         "symfony/property-info": "6.4.*",
@@ -26,6 +25,7 @@
         "symfony/security-bundle": "6.4.*",
         "symfony/serializer": "6.4.*",
         "symfony/twig-bundle": "6.4.*",
+        "symfony/uid": "^6.4",
         "symfony/validator": "6.4.*",
         "symfony/yaml": "6.4.*"
     },

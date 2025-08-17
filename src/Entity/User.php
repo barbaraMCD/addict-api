@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\Validator\Constraints\Uuid;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -23,11 +23,21 @@ class User
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
+    /**
+     * @var string The hashed password
+     */
+    #[ORM\Column(nullable: true)]
+    private ?string $password = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $username = null;
+
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Addiction::class, orphanRemoval: true)]
     private Collection $addictions;
 
     public function __construct()
     {
+        $this->id = Uuid::v7();
         $this->addictions = new ArrayCollection();
     }
 
@@ -44,6 +54,30 @@ class User
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): static
+    {
+        $this->username = $username;
 
         return $this;
     }
