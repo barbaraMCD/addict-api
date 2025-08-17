@@ -2,18 +2,18 @@
 
 namespace App\Enum;
 
-enum TriggerEnumType
+enum TriggerEnumType: string
 {
-    public const SADLY = 'Sadly';
-    public const ANGRY = 'Angry';
-    public const ANXIETY = 'Anxiety';
-    public const BOREDOM = 'Boredom'; // Ennui
-    public const LONELINESS = 'Loneliness'; // Solitude
-    public const WORK = 'Work';
-    public const FAMILY = 'Family';
-    public const FRIENDS = 'Friends';
-    public const PARTNER = 'Partner';
-    public const PARTY = 'Party';
-    public const CELEBRATIONS = 'Celebrations';
-    public const HOLIDAYS = 'Holidays';
+    case SADLY = 'Sadly';
+    case ANGRY = 'Angry';
+    case ANXIETY = 'Anxiety';
+    case BOREDOM = 'Boredom'; // Ennui
+    case LONELINESS = 'Loneliness'; // Solitude
+    case WORK = 'Work';
+    case FAMILY = 'Family';
+    case FRIENDS = 'Friends';
+    case PARTNER = 'Partner';
+    case PARTY = 'Party';
+    case CELEBRATIONS = 'Celebrations';
+    case HOLIDAYS = 'Holidays';
 }
