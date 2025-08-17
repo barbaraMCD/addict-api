@@ -1,99 +1,57 @@
-#syntax=docker/dockerfile:1.4
+FROM php:8.2.19-fpm as system
 
-# Adapted from https://github.com/dunglas/symfony-docker
-
-
-# Versions
-FROM dunglas/frankenphp:1-php8.3 AS frankenphp_upstream
-
-
-# The different stages of this Dockerfile are meant to be built into separate images
-# https://docs.docker.com/develop/develop-images/multistage-build/#stop-at-a-specific-build-stage
-# https://docs.docker.com/compose/compose-file/#target
-
-
-# Base FrankenPHP image
-FROM frankenphp_upstream AS frankenphp_base
-
+ENV COMPOSER_HOME /var/composer
+ENV COMPOSER_ALLOW_SUPERUSER 1
 WORKDIR /app
 
-# persistent / runtime deps
-# hadolint ignore=DL3008
-RUN apt-get update && apt-get install --no-install-recommends -y \
-	acl \
-	file \
-	gettext \
-	git \
-	&& rm -rf /var/lib/apt/lists/*
+# Install Dependencies
+RUN apt update && apt install -y wget curl git libcurl4-gnutls-dev zlib1g-dev libicu-dev g++ libxml2-dev libpq-dev zip libzip-dev unzip \
+    libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng-dev libxpm-dev libjpeg-dev libwebp-dev gnupg2 \
+    nginx supervisor \
+    --no-install-recommends
 
-# https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
-ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN apt autoremove && apt autoclean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN set -eux; \
-	install-php-extensions \
-		@composer \
-		apcu \
-		intl \
-		opcache \
-		zip \
-	;
+# Install PHP Extensions
+RUN docker-php-ext-install gettext sockets pdo pdo_pgsql intl opcache gd zip bcmath
 
-###> recipes ###
-###> doctrine/doctrine-bundle ###
-RUN set -eux; \
-	install-php-extensions pdo_pgsql
-###< doctrine/doctrine-bundle ###
-###< recipes ###
+# Install Composer with specific version
+RUN mkdir /var/composer
+RUN mkdir /var/composer/cache
+RUN chmod -R 777 /var/composer/cache
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --2.4
 
-COPY --link frankenphp/conf.d/app.ini $PHP_INI_DIR/conf.d/
-COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-COPY --link frankenphp/Caddyfile /etc/caddy/Caddyfile
+FROM system as builder
 
-ENTRYPOINT ["docker-entrypoint"]
-
-HEALTHCHECK --start-period=60s CMD curl -f http://localhost:2019/metrics || exit 1
-CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile" ]
-
-# Dev FrankenPHP image
-FROM frankenphp_base AS frankenphp_dev
-
-ENV APP_ENV=dev XDEBUG_MODE=off
-VOLUME /app/var/
-
-RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+COPY composer.json composer.lock symfony.lock ./
 
 RUN set -eux; \
-	install-php-extensions \
-		xdebug \
-	;
+    composer install --prefer-dist --no-scripts --no-progress --optimize-autoloader; \
+    composer clear-cache
 
-COPY --link frankenphp/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
+FROM builder as runner
 
-CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--watch" ]
+COPY ./ ./
 
-# Prod FrankenPHP image
-FROM frankenphp_base AS frankenphp_prod
+# Symfony CLI TEMPORARY USE 5.10.2 TO BE ABLE TO BIND 0.0.0.0 SHOULD BE REPLACE BY PHP-FPM
+#RUN wget https://get.symfony.com/cli/installer -O - | bash && mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+RUN wget https://github.com/symfony-cli/symfony-cli/releases/download/v5.10.2/symfony-cli_5.10.2_amd64.deb && dpkg -i symfony-cli_5.10.2_amd64.deb && rm symfony-cli_5.10.2_amd64.deb
 
-ENV APP_ENV=prod
-ENV FRANKENPHP_CONFIG="import worker.Caddyfile"
+FROM system as builder
 
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
-COPY --link frankenphp/conf.d/app.prod.ini $PHP_INI_DIR/conf.d/
-COPY --link frankenphp/worker.Caddyfile /etc/caddy/worker.Caddyfile
-
-# prevent the reinstallation of vendors at every changes in the source code
-COPY --link composer.* symfony.* ./
-RUN set -eux; \
-	composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
-
-# copy sources
-COPY --link . ./
-RUN rm -Rf frankenphp/
+COPY composer.json composer.lock symfony.lock ./
 
 RUN set -eux; \
-	mkdir -p var/cache var/log; \
-	composer dump-autoload --classmap-authoritative --no-dev; \
-	composer dump-env prod; \
-	composer run-script --no-dev post-install-cmd; \
-	chmod +x bin/console; sync;
+	composer install --prefer-dist --no-scripts --no-progress --no-suggest; \
+	composer clear-cache
+
+FROM builder as runner
+
+COPY ./ ./
+
+RUN bin/console cache:warmup
+
+EXPOSE 8000
+
+CMD ["php-fpm"]

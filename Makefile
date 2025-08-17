@@ -47,8 +47,8 @@ cli:
 	$(DOCKER_COMPOSE) exec api bash
 
 prettier:
-	docker run -v ${PWD}/src:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
-	docker run -v ${PWD}/tests:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
+	docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa php-cs-fixer fix src
+    docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa php-cs-fixer fix tests
 
 entity:
 	$(DOCKER_COMPOSE) run --rm api php bin/console make:entity
