@@ -5,7 +5,7 @@ namespace App\Tests;
 use App\Enum\AddictionEnumType;
 use Symfony\Component\HttpFoundation\Response;
 
-class TeamTest extends DefaultApiTestCase
+class AddictionTest extends BaseApiTestCase
 {
     protected function setUp(): void
     {
@@ -16,10 +16,10 @@ class TeamTest extends DefaultApiTestCase
 
     public function testRetrieveAddiction(): void
     {
-        $user = $this->createUser("test@gmail.com");
-        $userId = $this->getIdFromObject($user);
+        $user = $this->createUser("tedeeffsteszs@gmail.com");
+        $userIri = $user['@id'];
 
-        $addiction = $this->createAddiction(AddictionEnumType::CIGARETTES->name, $userId);
+        $addiction = $this->createAddiction(AddictionEnumType::CIGARETTES->name, $userIri);
         $addictionIri = $addiction['@id'];
 
         // Get addiction by id
@@ -29,7 +29,7 @@ class TeamTest extends DefaultApiTestCase
 
         $this->assertJsonContains([
             'name' => AddictionEnumType::CIGARETTES->name,
-            'user' => $user
+            'user' => $userIri
         ]);
     }
 

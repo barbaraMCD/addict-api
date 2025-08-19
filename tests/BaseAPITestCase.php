@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class DefaultApiTestCase extends ApiTestCase
+abstract class BaseApiTestCase extends ApiTestCase
 {
     protected function setUp(): void
     {
