@@ -3,22 +3,21 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
-use App\Entity\Trait\TimestampableTrait;
-use App\Enum\AddictionEnumStatus;
-use App\Repository\AddictionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\MaxDepth;
 use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity(repositoryClass: AddictionRepository::class)]
-#[ApiResource(mercure: true)]
+#[ORM\Table(name: '"trigger"')]
+#[ORM\Entity]
+#[ApiResource]
 #[ORM\HasLifecycleCallbacks]
-class Addiction
+class Trigger
 {
-    use TimestampableTrait;
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -28,23 +27,15 @@ class Addiction
     #[ORM\Column(length: 100)]
     private ?string $type = null;
 
-    #[ORM\Column(length: 100)]
-    private ?string $status = AddictionEnumStatus::ACTIVE->name;
-
-    #[ORM\Column]
-    private float $totalAmount = 0;
-
-    #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'addictions')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
-
-    #[ORM\OneToMany(mappedBy: 'consumption', targetEntity: Consumption::class, orphanRemoval: true)]
+    /**
+     * @var Collection<int, Consumption>
+     */
+    #[ORM\ManyToMany(targetEntity: Consumption::class, inversedBy: 'triggers')]
     private Collection $consumptions;
 
     public function __construct()
     {
         $this->id = Uuid::v7();
-        $this->totalAmount = 0.0;
         $this->consumptions = new ArrayCollection();
     }
 
@@ -65,31 +56,8 @@ class Addiction
         return $this;
     }
 
-    public function getTotalAmount(): ?float
-    {
-        return $this->totalAmount;
-    }
-
-    public function setTotalAmount(float $amount): static
-    {
-        $this->totalAmount += $amount;
-        return $this;
-    }
-
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    public function setUser(?User $user): static
-    {
-        $this->user = $user;
-
-        return $this;
-    }
-
     /**
-     * @return Collection<int, Addiction>
+     * @return Collection<int, Consumption>
      */
     public function getConsumptions(): Collection
     {
@@ -100,18 +68,14 @@ class Addiction
     {
         if (!$this->consumptions->contains($consumption)) {
             $this->consumptions->add($consumption);
-            $consumption->setAddiction($this);
         }
+
         return $this;
     }
-
     public function removeConsumption(Consumption $consumption): static
     {
-        if ($this->consumptions->removeElement($consumption)) {
-            if ($consumption->getAddiction() === $this) {
-                $consumption->setAddiction(null);
-            }
-        }
+        $this->consumptions->removeElement($consumption);
+
         return $this;
     }
 }
