@@ -11,8 +11,12 @@ install: ## Install all dependencies
 	$(DOCKER_COMPOSE) run --rm api composer install
 
 run: ## Launch docker-compose stack
+	$(DOCKER_COMPOSE) run --rm api bin/console doctrine:database:create ||true
+	$(DOCKER_COMPOSE) run --rm api bin/console doctrine:migrations:migrate --no-interaction
 	$(DOCKER_COMPOSE) up --remove-orphans -d
-	$(DOCKER_COMPOSE) run --rm api php bin/console doctrine:migrations:migrate --no-interaction
+
+stop: ## Stop the Docker containers
+	$(DOCKER_COMPOSE_ASTERISK) stop
 
 down: ## Delete the Docker containers and volumes
 	$(DOCKER_COMPOSE) down -v
@@ -30,10 +34,6 @@ test: ## run tests
 	$(DOCKER_COMPOSE) run --rm api php bin/console d:fixture:load -n --env=test
 	$(DOCKER_COMPOSE) run --rm api php bin/phpunit tests --testdox
 
-
-#client_migration: ## migrate the client database
-#	docker-compose -f $(DOCKER_COMPOSE_FILE) run --rm backend /bin/bash -c "npx sequelize-cli db:migrate --url \"mysql://\$MYSQL_USERNAME:\$MYSQL_PASSWORD@\$MYSQL_HOST:\$MYSQL_PORT/client1\" --seeders-path src/database/client/seeders/ --migrations-path src/database/client/migrations/"
-
 ps:
 	$(DOCKER_COMPOSE) ps
 
@@ -47,8 +47,9 @@ cli:
 	$(DOCKER_COMPOSE) exec api bash
 
 prettier:
-	docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa php-cs-fixer fix src
-    docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa php-cs-fixer fix tests
+	docker run -v ${PWD}/src:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
+	docker run -v ${PWD}/tests:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
 
 entity:
 	$(DOCKER_COMPOSE) run --rm api php bin/console make:entity
+

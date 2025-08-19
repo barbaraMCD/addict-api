@@ -11,20 +11,19 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class DefaultApiTestCase extends ApiTestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
         self::bootKernel();
-    //    $container = self::getContainer();
+        //    $container = self::getContainer();
     }
 
     protected function request(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-/*        if ($token) {
-            $options['auth_bearer'] = $token;
-        }*/
+        /*        if ($token) {
+                    $options['auth_bearer'] = $token;
+                }*/
 
         return $client->request(Request::METHOD_GET, $endpoint, $options);
     }
@@ -33,9 +32,9 @@ class DefaultApiTestCase extends ApiTestCase
     {
         $client = self::createClient();
 
-/*        if ($token) {
-            $options['auth_bearer'] = $token;
-        }*/
+        /*        if ($token) {
+                    $options['auth_bearer'] = $token;
+                }*/
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
@@ -46,9 +45,9 @@ class DefaultApiTestCase extends ApiTestCase
     protected function putRequest(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-/*        if ($token) {
-            $options['auth_bearer'] = $token;
-        }*/
+        /*        if ($token) {
+                    $options['auth_bearer'] = $token;
+                }*/
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
@@ -59,9 +58,9 @@ class DefaultApiTestCase extends ApiTestCase
     protected function patchRequest(string $endpoint, array $options = [], string $token = null): array
     {
         $client = self::createClient();
-/*        if ($token) {
-            $options['auth_bearer'] = $token;
-        }*/
+        /*        if ($token) {
+                    $options['auth_bearer'] = $token;
+                }*/
         $options['headers'] = [
             'Content-Type' => 'application/merge-patch+json',
         ];
@@ -72,9 +71,9 @@ class DefaultApiTestCase extends ApiTestCase
     protected function deleteRequest(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-/*        if ($token) {
-            $options['auth_bearer'] = $token;
-        }*/
+        /*        if ($token) {
+                    $options['auth_bearer'] = $token;
+                }*/
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
