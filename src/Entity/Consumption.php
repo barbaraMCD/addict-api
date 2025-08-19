@@ -13,6 +13,9 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\Mapping as ORM;
 
+// TODO ADD SEARCH FILTER
+// TODO ADD SERIALIZATION
+
 #[ORM\Entity(repositoryClass: ConsumptionRepository::class)]
 #[ApiResource(mercure: true)]
 #[ORM\HasLifecycleCallbacks]
@@ -33,7 +36,7 @@ class Consumption
     private ?string $comment = null;
 
     #[ORM\Column(type: Types::DATETIMETZ_MUTABLE)]
-    private ?\DateTimeInterface $date = null;
+    private ?\DateTimeInterface $date;
     #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'consumptions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Addiction $addiction = null;
@@ -42,10 +45,11 @@ class Consumption
     #[ORM\JoinColumn(nullable: true)]
     private Collection $triggers;
 
-    public function __construct()
+    public function __construct(?\DateTimeInterface $date = null)
     {
         $this->id = Uuid::v7();
         $this->triggers = new ArrayCollection();
+        $this->date = $date ?? new \DateTimeImmutable();
     }
 
     public function getId(): ?string

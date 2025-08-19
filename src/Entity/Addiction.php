@@ -38,7 +38,7 @@ class Addiction
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    #[ORM\OneToMany(mappedBy: 'consumption', targetEntity: Consumption::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'addiction', targetEntity: Consumption::class, orphanRemoval: true)]
     private Collection $consumptions;
 
     public function __construct()

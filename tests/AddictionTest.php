@@ -25,11 +25,15 @@ class AddictionTest extends BaseApiTestCase
         $this->request($addictionIri)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
-
-        $this->assertJsonContains([
+        $response = [
+            '@id' => $addictionIri,
+            'id' => $this->getIdFromObject($addiction),
             'type' => AddictionEnumType::CIGARETTES->name,
-            'user' => $userIri
-        ]);
+            'user' => $userIri,
+            'consumptions' => []
+        ];
+
+        $this->assertJsonContains($response);
     }
 
     public function testUpdateAddiction(): void

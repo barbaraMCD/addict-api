@@ -28,7 +28,6 @@ class ConsumptionFixtures extends BaseFixtures implements DependentFixtureInterf
         for ($i = 1; $i <= self::COUNT_NB_CONSUMPTIONS; ++$i) {
             $consumption = new Consumption();
             $consumption->setAddiction($addictions[$i % count($addictions)]);
-            $consumption->setDate($this->faker->dateTime());
 
             // Add triggers for some consumptions
             if (in_array($i, [4, 5, 6])) {
