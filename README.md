@@ -1,5 +1,17 @@
-# API
+# HELLO
 
-The API will be here.
+Welcome to my project, the goal is to track bad habits and help you to get rid of them.
 
-Refer to the [Getting Started Guide](https://api-platform.com/docs/distribution) for more information.
+# INSTALLATION
+
+To run this project u can use the following command from the Makefile:
+
+make install
+make run
+
+# TESTING
+
+make fixtures
+make test
+
+
