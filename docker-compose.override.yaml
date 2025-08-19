@@ -1,0 +1,13 @@
+services:
+  api-test:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: api-test
+    env_file: .env.test
+    environment:
+      APP_ENV: test
+    volumes:
+      - .:/app
+    depends_on:
+      - database

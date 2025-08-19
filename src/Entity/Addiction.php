@@ -23,10 +23,7 @@ class Addiction
     private ?Uuid $id;
 
     #[ORM\Column(length: 100)]
-    private ?string $name = null;
-
-    #[ORM\Column]
-    private int $quantity = 0;
+    private ?string $type = null;
 
     #[ORM\Column]
     private float $totalAmount = 0;
@@ -35,17 +32,9 @@ class Addiction
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    /**
-     * @var Collection<int, Trigger>
-     */
-    #[ORM\ManyToMany(targetEntity: Trigger::class, mappedBy: 'addictions')]
-    private Collection $triggers;
-
     public function __construct()
     {
         $this->id = Uuid::v7();
-        $this->triggers = new ArrayCollection();
-        $this->quantity = 0;
         $this->totalAmount = 0.0;
     }
 
@@ -54,26 +43,14 @@ class Addiction
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getType(): ?string
     {
-        return $this->name;
+        return $this->type;
     }
 
-    public function setName(string $name): static
+    public function setType(string $type): static
     {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getQuantity(): ?int
-    {
-        return $this->quantity;
-    }
-
-    public function setQuantity(int $quantity): static
-    {
-        $this->quantity = $quantity;
+        $this->type = $type;
 
         return $this;
     }
@@ -83,10 +60,9 @@ class Addiction
         return $this->totalAmount;
     }
 
-    public function setTotalAmount(float $totalAmount): static
+    public function setTotalAmount(float $amount): static
     {
-        $this->totalAmount = $totalAmount;
-
+        $this->totalAmount += $amount;
         return $this;
     }
 
@@ -98,33 +74,6 @@ class Addiction
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Trigger>
-     */
-    public function getTriggers(): Collection
-    {
-        return $this->triggers;
-    }
-
-    public function addTrigger(Trigger $trigger): static
-    {
-        if (!$this->triggers->contains($trigger)) {
-            $this->triggers->add($trigger);
-            $trigger->addAddiction($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTrigger(Trigger $trigger): static
-    {
-        if ($this->triggers->removeElement($trigger)) {
-            $trigger->removeAddiction($this);
-        }
 
         return $this;
     }

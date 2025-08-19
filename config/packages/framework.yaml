@@ -5,6 +5,7 @@ framework:
     annotations: false
     http_method_override: false
     handle_all_throwables: true
+    test: true
  
     trusted_proxies: '%env(TRUSTED_PROXIES)%'
     trusted_hosts: '%env(TRUSTED_HOSTS)%'
