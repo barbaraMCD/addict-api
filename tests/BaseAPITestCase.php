@@ -104,7 +104,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $userResponse->toArray();
     }
 
-    protected function createAddiction(string $name = AddictionEnumType::CAFFEINE->value, string $userId = null, int $totalAmount = 50): array
+    protected function createAddiction(string $type = AddictionEnumType::CAFFEINE->value, string $userId = null, int $totalAmount = 50): array
     {
         if (!$userId) {
             $userRetrievedData = $this->createUser();
@@ -115,26 +115,9 @@ abstract class BaseApiTestCase extends ApiTestCase
             TestEnum::ENDPOINT_ADDICTIONS->value,
             [
                 'json' => [
-                    'name' => $name,
                     'user' => $userId,
+                    'type' => $type,
                     'totalAmount' => $totalAmount
-                ],
-            ],
-        );
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
-
-        return $addictionResponse->toArray();
-    }
-
-    protected function createTrigger(string $type = TriggerEnumType::BOREDOM->value): array
-    {
-
-        $addictionResponse = $this->postRequest(
-            TestEnum::ENDPOINT_TRIGGERS->value,
-            [
-                'json' => [
-                    'type' => $type
                 ],
             ],
         );

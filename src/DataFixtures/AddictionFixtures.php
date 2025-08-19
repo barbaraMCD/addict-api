@@ -13,7 +13,6 @@ class AddictionFixtures extends BaseFixtures implements DependentFixtureInterfac
     {
         return [
             UserFixtures::class,
-            TriggerFixtures::class,
         ];
     }
 
@@ -27,16 +26,8 @@ class AddictionFixtures extends BaseFixtures implements DependentFixtureInterfac
 
         foreach (AddictionEnumType::cases() as $i => $case) {
             $addiction = new Addiction();
-            $addiction->setName($case->name);
+            $addiction->setType($case->name);
             $addiction->setUser($users[$i % count($users)]);
-
-            // Ajouter 1 ou plusieurs triggers pour certaines addictions
-            if (in_array($i, [4, 5, 6])) {
-                $addiction->addTrigger($this->getReference('TRIGGER_0'));
-                $addiction->addTrigger($this->getReference('TRIGGER_1'));
-            } else {
-                $addiction->addTrigger($this->getReference('TRIGGER_0'));
-            }
 
             $this->addReference('ADDICTION_'.$i, $addiction);
             $manager->persist($addiction);

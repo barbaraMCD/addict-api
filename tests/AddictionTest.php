@@ -27,7 +27,7 @@ class AddictionTest extends BaseApiTestCase
 
 
         $this->assertJsonContains([
-            'name' => AddictionEnumType::CIGARETTES->name,
+            'type' => AddictionEnumType::CIGARETTES->name,
             'user' => $userIri
         ]);
     }
