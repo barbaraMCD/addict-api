@@ -29,16 +29,17 @@ class Consumption
     #[ORM\Column]
     private int $quantity = 0;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $comment = null;
 
-    #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_MUTABLE)]
     private ?\DateTimeInterface $date = null;
     #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'consumptions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Addiction $addiction = null;
 
     #[ORM\ManyToMany(targetEntity: Trigger::class, mappedBy: 'consumptions')]
+    #[ORM\JoinColumn(nullable: true)]
     private Collection $triggers;
 
     public function __construct()
@@ -57,7 +58,7 @@ class Consumption
         return $this->comment;
     }
 
-    public function setComment(string $comment): static
+    public function setComment(?string $comment): static
     {
         $this->comment = $comment;
 
