@@ -1,5 +1,5 @@
 # Run the Docker containers
-DOCKER_COMPOSE=docker compose -f docker-compose.yaml
+DOCKER_COMPOSE=docker compose -f docker-compose.yaml -f docker-compose.override.yaml
 
 #export DOCKER_BUILDKIT=1
 
@@ -28,11 +28,11 @@ fixtures: ## seed the database with core data
 	$(DOCKER_COMPOSE) run --rm api php -d memory_limit=-1 bin/console doctrine:fixtures:load --no-interaction --purge-with-truncate
 
 test: ## run tests
-	$(DOCKER_COMPOSE) run --rm api php bin/console d:d:d --force --env=test || true
-	$(DOCKER_COMPOSE) run --rm api php bin/console d:d:c --env=test
-	$(DOCKER_COMPOSE) run --rm api php bin/console d:mi:mi -n --env=test
-	$(DOCKER_COMPOSE) run --rm api php bin/console d:fixture:load -n --env=test
-	$(DOCKER_COMPOSE) run --rm api php bin/phpunit tests --testdox
+	$(DOCKER_COMPOSE) run --rm api-test php bin/console d:d:d --force --env=test || true
+	$(DOCKER_COMPOSE) run --rm api-test php bin/console d:d:c --env=test
+	$(DOCKER_COMPOSE) run --rm api-test php bin/console d:mi:mi -n --env=test
+	$(DOCKER_COMPOSE) run --rm api-test php bin/console d:fixture:load -n --env=test
+	$(DOCKER_COMPOSE) run --rm api-test php bin/phpunit tests --testdox
 
 ps:
 	$(DOCKER_COMPOSE) ps

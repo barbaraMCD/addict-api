@@ -1,0 +1,22 @@
+# docker-compose.override.yml
+version: "3.9"
+
+services:
+  api-test:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: api-test
+    env_file: .env.test
+    environment:
+      APP_ENV: test
+    volumes:
+      - .:/app
+    depends_on:
+      - database
+    command: >
+      sh -c "
+        bin/console doctrine:database:create --if-not-exists --env=test &&
+        bin/console doctrine:migrations:migrate --no-interaction --env=test &&
+        php-fpm
+      "
