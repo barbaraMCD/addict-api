@@ -142,4 +142,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     {
         return substr($object['@id'], strrpos($object['@id'], '/') + 1);
     }
+
+    public function generateRandomEmail(): string
+    {
+        return 'test' . bin2hex(random_bytes(5)) . '@example.com';
+    }
 }

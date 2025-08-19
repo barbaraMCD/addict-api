@@ -16,10 +16,8 @@ class AddictionTest extends BaseApiTestCase
 
     public function testRetrieveAddiction(): void
     {
-        $user = $this->createUser("tedeefddszsteszds@gmail.com");
+        $user = $this->createUser($this->generateRandomEmail());
         $userIri = $user['@id'];
-
-        var_dump($_ENV['DATABASE_URL']);
 
         $addiction = $this->createAddiction(AddictionEnumType::CIGARETTES->name, $userIri);
         $addictionIri = $addiction['@id'];

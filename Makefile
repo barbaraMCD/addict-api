@@ -46,6 +46,9 @@ latest-migration:
 cli:
 	$(DOCKER_COMPOSE) exec api bash
 
+cli-test:
+	$(DOCKER_COMPOSE) exec api-test bash
+
 prettier:
 	docker run -v ${PWD}/src:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
 	docker run -v ${PWD}/tests:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code

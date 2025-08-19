@@ -1,6 +1,3 @@
-# docker-compose.override.yml
-version: "3.9"
-
 services:
   api-test:
     build:
