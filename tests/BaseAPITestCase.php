@@ -104,20 +104,41 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $userResponse->toArray();
     }
 
-    protected function createAddiction(string $type = AddictionEnumType::CAFFEINE->value, string $userId = null, int $totalAmount = 50): array
+    protected function createAddiction(string $type = AddictionEnumType::CAFFEINE->value, string $userIri = null, int $totalAmount = 50): array
     {
-        if (!$userId) {
+        if (!$userIri) {
             $userRetrievedData = $this->createUser();
-            $userId = $userRetrievedData['@id'];
+            $userIri = $userRetrievedData['@id'];
         }
 
         $addictionResponse = $this->postRequest(
             TestEnum::ENDPOINT_ADDICTIONS->value,
             [
                 'json' => [
-                    'user' => $userId,
+                    'user' => $userIri,
                     'type' => $type,
                     'totalAmount' => $totalAmount
+                ],
+            ],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        return $addictionResponse->toArray();
+    }
+
+    protected function createConsumption(string $addictionIri = null): array
+    {
+        if (!$addictionIri) {
+            $addictionRetrievedData = $this->createAddiction();
+            $addictionIri = $addictionRetrievedData['@id'];
+        }
+
+        $addictionResponse = $this->postRequest(
+            TestEnum::ENDPOINT_CONSUMPTIONS->value,
+            [
+                'json' => [
+                    'addiction' => $addictionIri
                 ],
             ],
         );
