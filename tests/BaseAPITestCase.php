@@ -81,8 +81,13 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $client->request(Request::METHOD_DELETE, $endpoint, $options);
     }
 
-    protected function createUser(string $email = "john@local"): array
+    protected function createUser(string $email = null): array
     {
+
+        if (!$email) {
+            $email = $this->generateRandomEmail();
+        }
+
         $userResponse = $this->postRequest(
             TestEnum::ENDPOINT_USERS->value,
             [
