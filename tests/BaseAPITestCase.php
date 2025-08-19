@@ -104,7 +104,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $userResponse->toArray();
     }
 
-    protected function createAddiction(string $name = AddictionEnumType::CAFFEINE->value, string $userId = null): array
+    protected function createAddiction(string $name = AddictionEnumType::CAFFEINE->value, string $userId = null, int $totalAmount = 50): array
     {
         if (!$userId) {
             $userRetrievedData = $this->createUser();
@@ -117,6 +117,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                 'json' => [
                     'name' => $name,
                     'user' => $userId,
+                    'totalAmount' => $totalAmount
                 ],
             ],
         );

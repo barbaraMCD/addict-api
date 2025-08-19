@@ -83,10 +83,9 @@ class Addiction
         return $this->totalAmount;
     }
 
-    public function setTotalAmount(float $totalAmount): static
+    public function setTotalAmount(float $amount): static
     {
-        $this->totalAmount = $totalAmount;
-
+        $this->totalAmount += $amount;
         return $this;
     }
 

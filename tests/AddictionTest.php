@@ -11,7 +11,6 @@ class AddictionTest extends BaseApiTestCase
     {
         parent::setUp();
         self::bootKernel();
-        $container = self::getContainer();
     }
 
     public function testRetrieveAddiction(): void
@@ -33,51 +32,26 @@ class AddictionTest extends BaseApiTestCase
         ]);
     }
 
-    /*    public function testUpdateTeam(): void
-        {
-            $addiction = $this->createTeam();
-            $addictionIri = $addiction['@id'];
-            $this->request($addictionIri, [], $this->token);
-            $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-            $addictionRetrieved = $this->patchRequest($addictionIri, [
-                'json' => [
-                    'name' => 'Team2',
-                ],
-            ], $this->token);
-            $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-            $this->assertEquals('Team2', $addictionRetrieved['name']);
-        }
+    public function testUpdateAddiction(): void
+    {
+        $newAmount = 100;
 
-        public function testDeleteTeam(): void
-        {
-            $addiction = $this->createTeam();
-            $this->deleteRequest($addiction['@id'], [], $this->token);
-            $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
-        }
+        $addiction = $this->createAddiction();
+        $addictionIri = $addiction['@id'];
 
-        public function testAddTeam(): void
-        {
-            $userResponse = $this->request(TestEnum::ENDPOINT_USERS.'?email='.TestEnum::EMAIL_MANAGER_5, [], $this->token);
+        $addictionRetrieved = $this->patchRequest($addictionIri, [
+            'json' => [
+                'totalAmount' => $newAmount
+            ],
+        ]);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertEquals($addiction['totalAmount'] + $newAmount, $addictionRetrieved['totalAmount']);
+    }
 
-            $userId = $userResponse->toArray()['hydra:member'][0]['@id'];
-            $userTeamId = $userResponse->toArray()['hydra:member'][0]['teams'][0];
-
-            $addictionRetrieved = $this->createTeam();
-            $addictionId = $addictionRetrieved['@id'];
-
-            $response = $this->patchRequest(
-                $userId,
-                [
-                    'json' => [
-                        'teams' => [
-                            $userTeamId,
-                            $addictionId,
-                        ]],
-                ],
-                $this->token
-            );
-            $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-            $responseTeams = $response['teams'];
-            self::assertEquals(2, count($responseTeams), 'Manager should have now 2 teams');
-        }*/
+    public function testDeleteAddiction(): void
+    {
+        $addiction = $this->createAddiction();
+        $this->deleteRequest($addiction['@id']);
+        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+    }
 }
