@@ -127,7 +127,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $addictionResponse->toArray();
     }
 
-    protected function createConsumption(string $addictionIri = null): array
+    protected function createConsumption(string $addictionIri = null, int $quantity = 2): array
     {
         if (!$addictionIri) {
             $addictionRetrievedData = $this->createAddiction();
@@ -138,7 +138,8 @@ abstract class BaseApiTestCase extends ApiTestCase
             TestEnum::ENDPOINT_CONSUMPTIONS->value,
             [
                 'json' => [
-                    'addiction' => $addictionIri
+                    'addiction' => $addictionIri,
+                    'quantity' => $quantity,
                 ],
             ],
         );

@@ -66,8 +66,6 @@ class ConsumptionTest extends BaseApiTestCase
     public function testAddTriggersConsumption(): void
     {
 
-        // TODO IL PEUT Y AVOIR QU'UNE SEULE CONSUMPTION /ADDICTION/PERS/JOUR SINON ÇA L'UPDATE DONC FAUT QUE JE FASSE UN PREPERSIST
-
         $triggerAnxiety = $this->createTrigger();
         $triggerFriends = $this->createTrigger(TriggerEnumType::FRIENDS->value);
 
@@ -97,6 +95,91 @@ class ConsumptionTest extends BaseApiTestCase
             ],
         ];
 
+
+        $this->assertJsonContains($response);
+    }
+
+    public function testUpdateConsumptionIfAlreadyExistsToday(): void
+    {
+        // test for event subscriber
+
+        $user = $this->createUser("bernard@gmail.com");
+        $userIri = $user['@id'];
+
+        $addiction = $this->createAddiction($userIri);
+        $addictionIri = $addiction["@id"];
+
+        $consumption = $this->createConsumption($addictionIri);
+        $consumptionIri = $consumption['@id'];
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $consumptionTwo = $this->createConsumption($addictionIri);
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            '@id' => $consumptionIri,
+            'id' => $this->getIdFromObject($consumption),
+            'quantity' => $consumption["quantity"] + $consumptionTwo["quantity"],
+            'date' => $consumption["date"],
+            'addiction' => $addictionIri,
+            'triggers' => [],
+        ];
+
+        $this->assertJsonContains($response);
+
+    }
+
+    public function testDontUpdateConsumptionForMultipleUsers(): void
+    {
+
+        // test if create two same addictions for two users the same day , the same addiction wasn't updated
+        // test for event subscriber
+
+        // When create addiction, generate random user email and create Caffeine addiction
+        $addiction = $this->createAddiction();
+        $addictionIri = $addiction["@id"];
+
+        $consumption = $this->createConsumption($addictionIri);
+        $consumptionIri = $consumption['@id'];
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $addictionTwo = $this->createAddiction();
+        $addictionTwoIri = $addictionTwo["@id"];
+
+        $consumptionTwo = $this->createConsumption($addictionTwoIri);
+        $consumptionTwoIri = $consumptionTwo['@id'];
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            '@id' => $consumptionIri,
+            'id' => $this->getIdFromObject($consumption),
+            'quantity' => $consumption["quantity"],
+            'date' => $consumption["date"],
+            'addiction' => $addictionIri,
+            'triggers' => [],
+        ];
+
+        $this->assertJsonContains($response);
+
+        $this->request($consumptionTwoIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            '@id' => $consumptionTwoIri,
+            'id' => $this->getIdFromObject($consumptionTwo),
+            'quantity' => $consumptionTwo["quantity"],
+            'date' => $consumptionTwo["date"],
+            'addiction' => $addictionTwoIri,
+            'triggers' => [],
+        ];
 
         $this->assertJsonContains($response);
     }
