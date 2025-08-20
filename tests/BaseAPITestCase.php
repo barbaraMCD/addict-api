@@ -134,7 +134,7 @@ abstract class BaseApiTestCase extends ApiTestCase
             $addictionIri = $addictionRetrievedData['@id'];
         }
 
-        $addictionResponse = $this->postRequest(
+        $consumptionResponse = $this->postRequest(
             TestEnum::ENDPOINT_CONSUMPTIONS->value,
             [
                 'json' => [
@@ -145,7 +145,27 @@ abstract class BaseApiTestCase extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
 
-        return $addictionResponse->toArray();
+        return $consumptionResponse->toArray();
+    }
+
+    protected function createTrigger(string $type = null): array
+    {
+        if(!$type) {
+            $type = TriggerEnumType::ANXIETY;
+        }
+
+        $triggerResponse = $this->postRequest(
+            TestEnum::ENDPOINT_TRIGGERS->value,
+            [
+                'json' => [
+                    'type' => $type
+                ],
+            ],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        return $triggerResponse->toArray();
     }
 
     protected function getIdFromObject($object): string
