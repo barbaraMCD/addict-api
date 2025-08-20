@@ -8,6 +8,7 @@ To run this project u can use the following command from the Makefile:
 
 ```
 make install
+make lol
 make run
 ```
 
