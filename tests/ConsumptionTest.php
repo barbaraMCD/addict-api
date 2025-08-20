@@ -183,4 +183,45 @@ class ConsumptionTest extends BaseApiTestCase
 
         $this->assertJsonContains($response);
     }
+
+    public function testSearchFilterConsumption(): void
+    {
+        $user = $this->createUser();
+        $userId = $this->getIdFromObject($user);
+        $userIri = $user['@id'];
+
+        $addiction = $this->createAddiction($userIri);
+        $addictionIri = $addiction['@id'];
+
+        $consumption = $this->createConsumption($addictionIri);
+        $consumptionIri = $consumption['@id'];
+
+        // Get addiction by id
+        $response = $this->request('/consumptions?addiction.user.id='. $userId)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+
+        $this->assertEquals($consumption['date'], $response['date']);
+        $this->assertStringContainsString('/addictions/', $response['addiction']);
+    }
+
+    public function testDateFilterConsumption(): void
+    {
+        $user = $this->createUser();
+        $userIri = $user['@id'];
+
+        $addiction = $this->createAddiction($userIri);
+        $addictionIri = $addiction['@id'];
+
+        $todayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('today'));
+        $yesterdayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('yesterday'));
+
+        $response = $this->request('/consumptions?date[before]=' . (new \DateTimeImmutable('today'))->format('Y-m-d'))->toArray();
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $this->assertCount(1, $response['hydra:member']);
+        $this->assertEquals($todayConsumption['id'], $response['hydra:member'][0]['id']);
+    }
+
 }

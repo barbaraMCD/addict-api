@@ -127,11 +127,15 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $addictionResponse->toArray();
     }
 
-    protected function createConsumption(string $addictionIri = null, int $quantity = 2): array
+    protected function createConsumption(string $addictionIri = null, int $quantity = 2, \DateTimeInterface $dateTime = null): array
     {
         if (!$addictionIri) {
             $addictionRetrievedData = $this->createAddiction();
             $addictionIri = $addictionRetrievedData['@id'];
+        }
+
+        if(!$dateTime) {
+            $dateTime = new \DateTime();
         }
 
         $consumptionResponse = $this->postRequest(
@@ -140,6 +144,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                 'json' => [
                     'addiction' => $addictionIri,
                     'quantity' => $quantity,
+                    'date' => $dateTime->format('Y-m-d H:i:s'),
                 ],
             ],
         );
