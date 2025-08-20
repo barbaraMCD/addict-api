@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Odm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\AddictionEnumStatus;
@@ -14,6 +16,10 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AddictionRepository::class)]
+#[ApiFilter(
+    filterClass: SearchFilter::class,
+    properties: ['type' => 'ipartial', 'status' => 'iexact', 'user.id' => 'iexact']
+)]
 #[ApiResource(mercure: true)]
 #[ORM\HasLifecycleCallbacks]
 class Addiction
