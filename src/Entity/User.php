@@ -2,7 +2,14 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -10,11 +17,27 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Table(name: '"user"')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ApiResource(mercure: true)]
+#[ApiFilter(
+    filterClass: SearchFilter::class,
+    properties: ['type' => 'ipartial', 'status' => 'iexact', 'user.id' => 'exact']
+)]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(
+            normalizationContext: ['groups' => ['user:item:read', 'addiction:item:read']]
+        ),
+        new Post(),
+        new Patch(),
+        new Delete(),
+    ],
+    mercure: true
+)]
 #[ORM\HasLifecycleCallbacks]
 class User
 {
@@ -26,6 +49,7 @@ class User
     private ?Uuid $id;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(['user:item:read'])]
     private ?string $email = null;
 
     /**
@@ -35,9 +59,11 @@ class User
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:item:read'])]
     private ?string $username = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Addiction::class, orphanRemoval: true)]
+    #[Groups(['user:item:read'])]
     private Collection $addictions;
 
     public function __construct()

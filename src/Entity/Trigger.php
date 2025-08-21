@@ -3,6 +3,11 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -14,7 +19,18 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Table(name: '"trigger"')]
 #[ORM\Entity]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(
+            normalizationContext: ['groups' => ['trigger:item:read']]
+        ),
+        new Post(),
+        new Patch(),
+        new Delete(),
+    ],
+    mercure: true
+)]
 #[ORM\HasLifecycleCallbacks]
 class Trigger
 {
@@ -25,6 +41,7 @@ class Trigger
     private ?Uuid $id;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['trigger:item:read'])]
     private ?string $type = null;
 
     /**
