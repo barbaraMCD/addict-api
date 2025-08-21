@@ -6,6 +6,8 @@ use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\ConsumptionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -13,11 +15,22 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ConsumptionRepository::class)]
-#[ApiResource(mercure: true)]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(
+            normalizationContext: [
+                'groups' => ['consumption:item:read', 'trigger:item:read', 'addiction:consumption:read']]
+        ),
+    ],
+    mercure: true,
+    order: ['addiction' => 'ASC']
+)]
 #[ApiFilter(SearchFilter::class, properties: [
     'addiction.type' => 'iexact',
     'addiction.user.id' => 'exact',
@@ -37,19 +50,24 @@ class Consumption
     private ?Uuid $id;
 
     #[ORM\Column]
+    #[Groups(['consumption:item:read'])]
     private int $quantity = 0;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['consumption:item:read'])]
     private ?string $comment = null;
 
     #[ORM\Column(type: Types::DATETIMETZ_MUTABLE)]
+    #[Groups(['consumption:item:read'])]
     private ?\DateTimeInterface $date;
     #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'consumptions')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['consumption:item:read'])]
     private ?Addiction $addiction = null;
 
     #[ORM\ManyToMany(targetEntity: Trigger::class, mappedBy: 'consumptions')]
     #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['consumption:item:read'])]
     private Collection $triggers;
 
     public function __construct(?\DateTimeInterface $date = null)

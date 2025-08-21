@@ -5,6 +5,8 @@ namespace App\Entity;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\AddictionEnumStatus;
 use App\Repository\AddictionRepository;
@@ -13,6 +15,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\MaxDepth;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AddictionRepository::class)]
@@ -20,7 +24,18 @@ use Symfony\Component\Uid\Uuid;
     filterClass: SearchFilter::class,
     properties: ['type' => 'ipartial', 'status' => 'iexact', 'user.id' => 'exact']
 )]
-#[ApiResource(mercure: true)]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(
+            normalizationContext: ['groups' => ['addiction:item:read', 'consumption:item:read', 'trigger:item:read'],
+                'enable_max_depth' => true
+            ]
+        ),
+    ],
+    mercure: true,
+    order: ['type' => 'ASC']
+)]
 #[ORM\HasLifecycleCallbacks]
 class Addiction
 {
@@ -32,12 +47,15 @@ class Addiction
     private ?Uuid $id;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['addiction:item:read', 'addiction:consumption:read'])]
     private ?string $type = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['addiction:item:read'])]
     private ?string $status = AddictionEnumStatus::ACTIVE->name;
 
     #[ORM\Column]
+    #[Groups(['addiction:item:read'])]
     private float $totalAmount = 0;
 
     #[ORM\ManyToOne(cascade: ['persist'], inversedBy: 'addictions')]
@@ -45,6 +63,8 @@ class Addiction
     private ?User $user = null;
 
     #[ORM\OneToMany(mappedBy: 'addiction', targetEntity: Consumption::class, orphanRemoval: true)]
+    #[Groups(['addiction:item:read'])]
+    #[MaxDepth(1)]
     private Collection $consumptions;
 
     public function __construct()
