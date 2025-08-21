@@ -16,7 +16,7 @@ run: ## Launch docker-compose stack
 	$(DOCKER_COMPOSE) up --remove-orphans -d
 
 stop: ## Stop the Docker containers
-	$(DOCKER_COMPOSE_ASTERISK) stop
+	$(DOCKER_COMPOSE) stop
 
 down: ## Delete the Docker containers and volumes
 	$(DOCKER_COMPOSE) down -v

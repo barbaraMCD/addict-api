@@ -18,7 +18,7 @@ class AddictionTest extends BaseApiTestCase
         $user = $this->createUser($this->generateRandomEmail());
         $userIri = $user['@id'];
 
-        $addiction = $this->createAddiction(AddictionEnumType::CIGARETTES->name, $userIri);
+        $addiction = $this->createAddiction($userIri, AddictionEnumType::CIGARETTES->value);
         $addictionIri = $addiction['@id'];
 
         // Get addiction by id
@@ -28,7 +28,7 @@ class AddictionTest extends BaseApiTestCase
         $response = [
             '@id' => $addictionIri,
             'id' => $this->getIdFromObject($addiction),
-            'type' => AddictionEnumType::CIGARETTES->name,
+            'type' => AddictionEnumType::CIGARETTES->value,
             'user' => $userIri,
             'consumptions' => []
         ];
@@ -57,5 +57,35 @@ class AddictionTest extends BaseApiTestCase
         $addiction = $this->createAddiction();
         $this->deleteRequest($addiction['@id']);
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+    }
+
+    public function testSearchFilterAddiction(): void
+    {
+        $user = $this->createUser();
+        $userId = $this->getIdFromObject($user);
+        $userIri = $user['@id'];
+
+        $addiction = $this->createAddiction($userIri);
+        $addictionIri = $addiction['@id'];
+
+        // Get addiction by id
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            'hydra:member' => [[
+                '@id' => $addictionIri,
+                'id' => $this->getIdFromObject($addiction),
+                'user' => $userIri,
+            ]]
+        ];
+
+        $this->assertJsonContains($response);
+
+        $member = $responseRetrieved['hydra:member'][0];
+
+        $this->assertArrayHasKey('totalAmount', $member);
+        $this->assertArrayHasKey('type', $member);
+        $this->assertArrayHasKey('consumptions', $member);
     }
 }

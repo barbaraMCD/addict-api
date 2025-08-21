@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\ConsumptionRepository;
@@ -13,11 +16,15 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\Mapping as ORM;
 
-// TODO ADD SEARCH FILTER
-// TODO ADD SERIALIZATION
-
 #[ORM\Entity(repositoryClass: ConsumptionRepository::class)]
 #[ApiResource(mercure: true)]
+#[ApiFilter(SearchFilter::class, properties: [
+    'addiction.type' => 'iexact',
+    'addiction.user.id' => 'exact',
+    'triggers.type' => 'iexact',
+    'addiction.id' => 'exact'
+])]
+#[ApiFilter(DateFilter::class, properties: ['date'])]
 #[ORM\HasLifecycleCallbacks]
 class Consumption
 {

@@ -18,6 +18,37 @@ abstract class BaseApiTestCase extends ApiTestCase
         //    $container = self::getContainer();
     }
 
+    /**
+     * Reset les séquences auto-increment pour éviter les conflits
+     */
+    private function resetDatabaseSequences(): void
+    {
+        try {
+            $em = self::getContainer()->get('doctrine')->getManager();
+            $connection = $em->getConnection();
+            $platform = $connection->getDatabasePlatform();
+
+            // Pour MySQL
+            if ($platform->getName() === 'mysql') {
+                $tables = ['user', 'addiction', 'consumption', 'trigger']; // Adaptez selon vos tables
+                foreach ($tables as $table) {
+                    $connection->executeStatement("ALTER TABLE {$table} AUTO_INCREMENT = 1");
+                }
+            }
+            // Pour PostgreSQL
+            elseif ($platform->getName() === 'postgresql') {
+                $sequences = $connection->fetchAllAssociative(
+                    "SELECT schemaname, sequencename FROM pg_sequences WHERE schemaname = 'public'"
+                );
+                foreach ($sequences as $sequence) {
+                    $connection->executeStatement("ALTER SEQUENCE {$sequence['sequencename']} RESTART WITH 1");
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore les erreurs de reset - pas critique
+        }
+    }
+
     protected function request(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
@@ -104,7 +135,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $userResponse->toArray();
     }
 
-    protected function createAddiction(string $type = AddictionEnumType::CAFFEINE->value, string $userIri = null, int $totalAmount = 50): array
+    protected function createAddiction(string $userIri = null, string $type = AddictionEnumType::CAFFEINE->value, int $totalAmount = 50): array
     {
         if (!$userIri) {
             $userRetrievedData = $this->createUser();
@@ -127,25 +158,51 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $addictionResponse->toArray();
     }
 
-    protected function createConsumption(string $addictionIri = null): array
+    protected function createConsumption(string $addictionIri = null, int $quantity = 2, \DateTimeImmutable $dateTime = null): array
     {
         if (!$addictionIri) {
             $addictionRetrievedData = $this->createAddiction();
             $addictionIri = $addictionRetrievedData['@id'];
         }
 
-        $addictionResponse = $this->postRequest(
+        if(!$dateTime) {
+            $dateTime = new \DateTime();
+        }
+
+        $consumptionResponse = $this->postRequest(
             TestEnum::ENDPOINT_CONSUMPTIONS->value,
             [
                 'json' => [
-                    'addiction' => $addictionIri
+                    'addiction' => $addictionIri,
+                    'quantity' => $quantity,
+                    'date' => $dateTime->format('Y-m-d H:i:s'),
                 ],
             ],
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
 
-        return $addictionResponse->toArray();
+        return $consumptionResponse->toArray();
+    }
+
+    protected function createTrigger(string $type = null): array
+    {
+        if(!$type) {
+            $type = TriggerEnumType::ANXIETY;
+        }
+
+        $triggerResponse = $this->postRequest(
+            TestEnum::ENDPOINT_TRIGGERS->value,
+            [
+                'json' => [
+                    'type' => $type
+                ],
+            ],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        return $triggerResponse->toArray();
     }
 
     protected function getIdFromObject($object): string

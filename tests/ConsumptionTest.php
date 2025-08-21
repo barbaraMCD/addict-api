@@ -2,6 +2,8 @@
 
 namespace App\Tests;
 
+use App\Enum\AddictionEnumType;
+use App\Enum\TriggerEnumType;
 use Symfony\Component\HttpFoundation\Response;
 
 class ConsumptionTest extends BaseApiTestCase
@@ -16,9 +18,9 @@ class ConsumptionTest extends BaseApiTestCase
     {
 
         $addiction = $this->createAddiction();
-        $additionIri = $addiction["@id"];
+        $addictionIri = $addiction["@id"];
 
-        $consumption = $this->createConsumption($additionIri);
+        $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
         // Get consumption by id
@@ -31,7 +33,7 @@ class ConsumptionTest extends BaseApiTestCase
             'id' => $this->getIdFromObject($consumption),
             'quantity' => $consumption["quantity"],
             'date' => $consumption["date"],
-            'addiction' => $additionIri,
+            'addiction' => $addictionIri,
             'triggers' => [],
         ];
 
@@ -62,5 +64,172 @@ class ConsumptionTest extends BaseApiTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
-    // TODO ADD WITH SEVERALS TRIGGERS
+    public function testAddTriggersConsumption(): void
+    {
+
+        $triggerAnxiety = $this->createTrigger();
+        $triggerFriends = $this->createTrigger(TriggerEnumType::FRIENDS->value);
+
+        $addiction = $this->createAddiction();
+        $addictionIri = $addiction["@id"];
+
+        $this->postRequest(
+            TestEnum::ENDPOINT_CONSUMPTIONS->value,
+            [
+                'json' => [
+                    'addiction' => $addictionIri,
+                    'triggers' => [
+                        $triggerAnxiety['@id'],
+                        $triggerFriends['@id']
+                    ]
+                ],
+            ],
+        )->toArray();
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $response = [
+            'addiction' => $addictionIri,
+            'triggers' => [
+                $triggerAnxiety['@id'],
+                $triggerFriends['@id']
+            ],
+        ];
+
+
+        $this->assertJsonContains($response);
+    }
+
+    public function testUpdateConsumptionIfAlreadyExistsToday(): void
+    {
+        // test for event subscriber
+
+        $user = $this->createUser("bernard@gmail.com");
+        $userIri = $user['@id'];
+
+        $addiction = $this->createAddiction($userIri);
+        $addictionIri = $addiction["@id"];
+
+        $consumption = $this->createConsumption($addictionIri);
+        $consumptionIri = $consumption['@id'];
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $consumptionTwo = $this->createConsumption($addictionIri);
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            '@id' => $consumptionIri,
+            'id' => $this->getIdFromObject($consumption),
+            'quantity' => $consumption["quantity"] + $consumptionTwo["quantity"],
+            'date' => $consumption["date"],
+            'addiction' => $addictionIri,
+            'triggers' => [],
+        ];
+
+        $this->assertJsonContains($response);
+
+    }
+
+    public function testDontUpdateConsumptionForMultipleUsers(): void
+    {
+
+        // test if create two same addictions for two users the same day , the same addiction wasn't updated
+        // test for event subscriber
+
+        // When create addiction, generate random user email and create Caffeine addiction
+        $addiction = $this->createAddiction();
+        $addictionIri = $addiction["@id"];
+
+        $consumption = $this->createConsumption($addictionIri);
+        $consumptionIri = $consumption['@id'];
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $addictionTwo = $this->createAddiction();
+        $addictionTwoIri = $addictionTwo["@id"];
+
+        $consumptionTwo = $this->createConsumption($addictionTwoIri);
+        $consumptionTwoIri = $consumptionTwo['@id'];
+
+        $this->request($consumptionIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            '@id' => $consumptionIri,
+            'id' => $this->getIdFromObject($consumption),
+            'quantity' => $consumption["quantity"],
+            'date' => $consumption["date"],
+            'addiction' => $addictionIri,
+            'triggers' => [],
+        ];
+
+        $this->assertJsonContains($response);
+
+        $this->request($consumptionTwoIri)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            '@id' => $consumptionTwoIri,
+            'id' => $this->getIdFromObject($consumptionTwo),
+            'quantity' => $consumptionTwo["quantity"],
+            'date' => $consumptionTwo["date"],
+            'addiction' => $addictionTwoIri,
+            'triggers' => [],
+        ];
+
+        $this->assertJsonContains($response);
+    }
+
+    public function testSearchFilterConsumption(): void
+    {
+        $user = $this->createUser();
+        $userId = $this->getIdFromObject($user);
+        $userIri = $user['@id'];
+
+        $addiction = $this->createAddiction($userIri);
+        $addictionIri = $addiction['@id'];
+
+        $consumption = $this->createConsumption($addictionIri);
+        $consumptionIri = $consumption['@id'];
+
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $userId)->toArray();
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $response = [
+            'hydra:member' => [[
+                '@id' => $consumptionIri,
+                'id' => $this->getIdFromObject($consumption),
+            ]]
+        ];
+
+        $this->assertJsonContains($response);
+
+        $member = $responseRetrieved['hydra:member'][0];
+
+        $this->assertArrayHasKey('quantity', $member);
+        $this->assertArrayHasKey('addiction', $member);
+        $this->assertArrayHasKey('triggers', $member);
+    }
+
+    public function testDateFilterConsumption(): void
+    {
+        $addiction = $this->createAddiction(null, AddictionEnumType::CLOTHES->value);
+        $addictionIri = $addiction['@id'];
+        $addictionId = $this->getIdFromObject($addiction);
+
+        $todayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('today'));
+        $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('yesterday'));
+
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'))->toArray();
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertEquals(1, $responseRetrieved['hydra:totalItems']);
+        $this->assertEquals($todayConsumption["date"], $responseRetrieved['hydra:member'][0]['date']);
+    }
+
 }
