@@ -5,8 +5,11 @@ namespace App\Entity;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -29,6 +32,9 @@ use Symfony\Component\Uid\Uuid;
         new Get(
             normalizationContext: ['groups' => ['user:item:read', 'addiction:item:read']]
         ),
+        new Post(),
+        new Patch(),
+        new Delete(),
     ],
     mercure: true
 )]

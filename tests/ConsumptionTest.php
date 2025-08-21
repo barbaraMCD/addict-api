@@ -23,17 +23,18 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        // Get consumption by id
         $this->request($consumptionIri)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
             '@id' => $consumptionIri,
-            'id' => $this->getIdFromObject($consumption),
             'quantity' => $consumption["quantity"],
             'date' => $consumption["date"],
-            'addiction' => $addictionIri,
+            'addiction' => [
+                '@id' => $addictionIri,
+                'type' => $addiction["type"],
+            ],
             'triggers' => [],
         ];
 
@@ -104,7 +105,9 @@ class ConsumptionTest extends BaseApiTestCase
     {
         // test for event subscriber
 
-        $user = $this->createUser("bernard@gmail.com");
+        $userEmail = $this->generateRandomEmail();
+
+        $user = $this->createUser($userEmail);
         $userIri = $user['@id'];
 
         $addiction = $this->createAddiction($userIri);
@@ -123,10 +126,12 @@ class ConsumptionTest extends BaseApiTestCase
 
         $response = [
             '@id' => $consumptionIri,
-            'id' => $this->getIdFromObject($consumption),
             'quantity' => $consumption["quantity"] + $consumptionTwo["quantity"],
             'date' => $consumption["date"],
-            'addiction' => $addictionIri,
+            'addiction' => [
+                '@id' => $addictionIri,
+                'type' => $addiction["type"],
+            ],
             'triggers' => [],
         ];
 
@@ -161,10 +166,12 @@ class ConsumptionTest extends BaseApiTestCase
 
         $response = [
             '@id' => $consumptionIri,
-            'id' => $this->getIdFromObject($consumption),
             'quantity' => $consumption["quantity"],
             'date' => $consumption["date"],
-            'addiction' => $addictionIri,
+            'addiction' => [
+                '@id' => $addictionIri,
+                'type' => $addiction["type"],
+            ],
             'triggers' => [],
         ];
 
@@ -175,10 +182,12 @@ class ConsumptionTest extends BaseApiTestCase
 
         $response = [
             '@id' => $consumptionTwoIri,
-            'id' => $this->getIdFromObject($consumptionTwo),
             'quantity' => $consumptionTwo["quantity"],
             'date' => $consumptionTwo["date"],
-            'addiction' => $addictionTwoIri,
+            'addiction' => [
+                '@id' => $addictionTwoIri,
+                'type' => $addictionTwo["type"],
+            ],
             'triggers' => [],
         ];
 

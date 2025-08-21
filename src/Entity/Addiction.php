@@ -5,8 +5,11 @@ namespace App\Entity;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\AddictionEnumStatus;
 use App\Repository\AddictionRepository;
@@ -32,6 +35,9 @@ use Symfony\Component\Uid\Uuid;
                 'enable_max_depth' => true
             ]
         ),
+        new Post(),
+        new Patch(),
+        new Delete(),
     ],
     mercure: true,
     order: ['type' => 'ASC']
@@ -50,9 +56,9 @@ class Addiction
     #[Groups(['addiction:item:read', 'addiction:consumption:read'])]
     private ?string $type = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, options: ['default' => AddictionEnumStatus::ACTIVE])]
     #[Groups(['addiction:item:read'])]
-    private ?string $status = AddictionEnumStatus::ACTIVE->name;
+    private string $status;
 
     #[ORM\Column]
     #[Groups(['addiction:item:read'])]
@@ -67,11 +73,12 @@ class Addiction
     #[MaxDepth(1)]
     private Collection $consumptions;
 
-    public function __construct()
+    public function __construct(string $status = AddictionEnumStatus::ACTIVE->value)
     {
         $this->id = Uuid::v7();
         $this->totalAmount = 0.0;
         $this->consumptions = new ArrayCollection();
+        $this->status = $status;
     }
 
     public function getId(): ?string
@@ -87,6 +94,18 @@ class Addiction
     public function setType(string $type): static
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

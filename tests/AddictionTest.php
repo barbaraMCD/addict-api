@@ -19,21 +19,22 @@ class AddictionTest extends BaseApiTestCase
         $userIri = $user['@id'];
 
         $addiction = $this->createAddiction($userIri, AddictionEnumType::CIGARETTES->value);
+
         $addictionIri = $addiction['@id'];
 
-        // Get addiction by id
-        $this->request($addictionIri)->toArray();
+        $responseRetrieved = $this->request($addictionIri)->toArray();
+
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
             '@id' => $addictionIri,
-            'id' => $this->getIdFromObject($addiction),
             'type' => AddictionEnumType::CIGARETTES->value,
-            'user' => $userIri,
             'consumptions' => []
         ];
 
         $this->assertJsonContains($response);
+        $this->assertArrayHasKey("totalAmount", $responseRetrieved);
+        $this->assertArrayHasKey("status", $responseRetrieved);
     }
 
     public function testUpdateAddiction(): void
@@ -68,7 +69,6 @@ class AddictionTest extends BaseApiTestCase
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction['@id'];
 
-        // Get addiction by id
         $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 

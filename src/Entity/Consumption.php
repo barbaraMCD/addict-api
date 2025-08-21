@@ -6,8 +6,11 @@ use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\ConsumptionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -27,6 +30,9 @@ use Doctrine\ORM\Mapping as ORM;
             normalizationContext: [
                 'groups' => ['consumption:item:read', 'trigger:item:read', 'addiction:consumption:read']]
         ),
+        new Post(),
+        new Patch(),
+        new Delete(),
     ],
     mercure: true,
     order: ['addiction' => 'ASC']
