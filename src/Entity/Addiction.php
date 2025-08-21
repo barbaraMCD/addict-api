@@ -18,7 +18,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: AddictionRepository::class)]
 #[ApiFilter(
     filterClass: SearchFilter::class,
-    properties: ['type' => 'ipartial', 'status' => 'iexact', 'user.id' => 'iexact']
+    properties: ['type' => 'ipartial', 'status' => 'iexact', 'user.id' => 'exact']
 )]
 #[ApiResource(mercure: true)]
 #[ORM\HasLifecycleCallbacks]

@@ -22,6 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
     'addiction.type' => 'iexact',
     'addiction.user.id' => 'exact',
     'triggers.type' => 'iexact',
+    'addiction.id' => 'exact'
 ])]
 #[ApiFilter(DateFilter::class, properties: ['date'])]
 #[ORM\HasLifecycleCallbacks]

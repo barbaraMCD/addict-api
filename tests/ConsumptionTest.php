@@ -2,6 +2,7 @@
 
 namespace App\Tests;
 
+use App\Enum\AddictionEnumType;
 use App\Enum\TriggerEnumType;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -196,32 +197,40 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        // Get addiction by id
-        $response = $this->request('/consumptions?addiction.user.id='. $userId)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $userId)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
+        $response = [
+            'hydra:member' => [[
+                '@id' => $consumptionIri,
+                'id' => $this->getIdFromObject($consumption),
+            ]]
+        ];
 
-        $this->assertEquals($consumption['date'], $response['date']);
-        $this->assertStringContainsString('/addictions/', $response['addiction']);
+        $this->assertJsonContains($response);
+
+        $member = $responseRetrieved['hydra:member'][0];
+
+        $this->assertArrayHasKey('quantity', $member);
+        $this->assertArrayHasKey('addiction', $member);
+        $this->assertArrayHasKey('triggers', $member);
     }
 
     public function testDateFilterConsumption(): void
     {
-        $user = $this->createUser();
-        $userIri = $user['@id'];
-
-        $addiction = $this->createAddiction($userIri);
+        // TODO AJOUTER UN TEST POUR QU UN USER NE PUISSE AVOIR QU UNE SEULE ADDICTION DU MEME TYPE
+        $addiction = $this->createAddiction(null, AddictionEnumType::CLOTHES->value);
         $addictionIri = $addiction['@id'];
+        $addictionId = $this->getIdFromObject($addiction);
 
         $todayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('today'));
-        $yesterdayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('yesterday'));
+        $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('yesterday'));
 
-        $response = $this->request('/consumptions?date[before]=' . (new \DateTimeImmutable('today'))->format('Y-m-d'))->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'))->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-
-        $this->assertCount(1, $response['hydra:member']);
-        $this->assertEquals($todayConsumption['id'], $response['hydra:member'][0]['id']);
+        $this->assertEquals(1, $responseRetrieved['hydra:totalItems']);
+        $this->assertEquals($todayConsumption["date"], $responseRetrieved['hydra:member'][0]['date']);
     }
 
 }

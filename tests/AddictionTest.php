@@ -18,7 +18,7 @@ class AddictionTest extends BaseApiTestCase
         $user = $this->createUser($this->generateRandomEmail());
         $userIri = $user['@id'];
 
-        $addiction = $this->createAddiction(AddictionEnumType::CIGARETTES->name, $userIri);
+        $addiction = $this->createAddiction($userIri, AddictionEnumType::CIGARETTES->value);
         $addictionIri = $addiction['@id'];
 
         // Get addiction by id
@@ -28,7 +28,7 @@ class AddictionTest extends BaseApiTestCase
         $response = [
             '@id' => $addictionIri,
             'id' => $this->getIdFromObject($addiction),
-            'type' => AddictionEnumType::CIGARETTES->name,
+            'type' => AddictionEnumType::CIGARETTES->value,
             'user' => $userIri,
             'consumptions' => []
         ];
@@ -69,13 +69,23 @@ class AddictionTest extends BaseApiTestCase
         $addictionIri = $addiction['@id'];
 
         // Get addiction by id
-        $response = $this->request($addictionIri ."?user.id=". $userId)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
+        $response = [
+            'hydra:member' => [[
+                '@id' => $addictionIri,
+                'id' => $this->getIdFromObject($addiction),
+                'user' => $userIri,
+            ]]
+        ];
 
-        $this->assertEquals($addiction['type'], $response['type']);
-        $this->assertEquals($addiction['totalAmount'], $response['totalAmount']);
-        $this->assertEquals([], $response['consumptions']);
-        $this->assertStringContainsString('/users/', $response['user']);
+        $this->assertJsonContains($response);
+
+        $member = $responseRetrieved['hydra:member'][0];
+
+        $this->assertArrayHasKey('totalAmount', $member);
+        $this->assertArrayHasKey('type', $member);
+        $this->assertArrayHasKey('consumptions', $member);
     }
 }
