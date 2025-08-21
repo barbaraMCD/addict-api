@@ -218,7 +218,6 @@ class ConsumptionTest extends BaseApiTestCase
 
     public function testDateFilterConsumption(): void
     {
-        // TODO AJOUTER UN TEST POUR QU UN USER NE PUISSE AVOIR QU UNE SEULE ADDICTION DU MEME TYPE
         $addiction = $this->createAddiction(null, AddictionEnumType::CLOTHES->value);
         $addictionIri = $addiction['@id'];
         $addictionId = $this->getIdFromObject($addiction);
