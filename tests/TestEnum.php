@@ -10,4 +10,6 @@ enum TestEnum: string
     case ENDPOINT_CONSUMPTIONS = '/consumptions';
     case ENDPOINT_TRIGGERS = '/triggers';
 
+    case ENDPOINT_LOGIN = '/api/login_check';
+
 }

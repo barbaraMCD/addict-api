@@ -11,19 +11,20 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 abstract class BaseApiTestCase extends ApiTestCase
 {
+    protected string $token;
     protected function setUp(): void
     {
         parent::setUp();
         self::bootKernel();
+        $this->token = $this->loginUser('user1@test.local');
     }
 
     protected function request(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
-
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         return $client->request(Request::METHOD_GET, $endpoint, $options);
     }
 
@@ -31,9 +32,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     {
         $client = self::createClient();
 
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
@@ -44,9 +45,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function putRequest(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
@@ -57,9 +58,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function patchRequest(string $endpoint, array $options = [], string $token = null): array
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/merge-patch+json',
         ];
@@ -70,14 +71,41 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function deleteRequest(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
 
         return $client->request(Request::METHOD_DELETE, $endpoint, $options);
+    }
+
+    protected function loginUser(string $email = null, string $password = "test"): string
+    {
+        if (!$email) {
+            $email = $this->generateRandomEmail();
+        }
+
+        $loginResponse = $this->postRequest(
+            TestEnum::ENDPOINT_LOGIN->value,
+            [
+                'json' => [
+                    'email' => $email,
+                    'password' => $password,
+                ],
+            ],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $data = $loginResponse->toArray();
+        if (!isset($data['token'])) {
+            throw new \RuntimeException('Token not returned in login response.');
+        }
+
+        return $data['token'];
+
     }
 
     protected function createUser(string $email = null): array
@@ -119,6 +147,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'totalAmount' => $totalAmount
                 ],
             ],
+            $this->token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -146,6 +175,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'date' => $dateTime->format('Y-m-d H:i:s'),
                 ],
             ],
+            $this->token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -166,6 +196,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'type' => $type
                 ],
             ],
+            $this->token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);

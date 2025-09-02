@@ -23,7 +23,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
@@ -53,7 +53,7 @@ class ConsumptionTest extends BaseApiTestCase
             'json' => [
                 'comment' => $comment
             ],
-        ]);
+        ], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertEquals($comment, $ConsumptionRetrieved['comment']);
     }
@@ -61,7 +61,7 @@ class ConsumptionTest extends BaseApiTestCase
     public function testDeleteConsumption(): void
     {
         $consumption = $this->createConsumption();
-        $this->deleteRequest($consumption['@id']);
+        $this->deleteRequest($consumption['@id'], [], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
@@ -84,6 +84,7 @@ class ConsumptionTest extends BaseApiTestCase
                         $triggerFriends['@id']
                     ]
                 ],
+                $this->token
             ],
         )->toArray();
 
@@ -116,12 +117,12 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $consumptionTwo = $this->createConsumption($addictionIri);
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -152,7 +153,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $addictionTwo = $this->createAddiction();
@@ -161,7 +162,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumptionTwo = $this->createConsumption($addictionTwoIri);
         $consumptionTwoIri = $consumptionTwo['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -177,7 +178,7 @@ class ConsumptionTest extends BaseApiTestCase
 
         $this->assertJsonContains($response);
 
-        $this->request($consumptionTwoIri)->toArray();
+        $this->request($consumptionTwoIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -206,7 +207,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $userId)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $userId, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -234,7 +235,7 @@ class ConsumptionTest extends BaseApiTestCase
         $todayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('today'));
         $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('yesterday'));
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'))->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'), [], $this->token)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertEquals(1, $responseRetrieved['hydra:totalItems']);

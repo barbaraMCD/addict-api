@@ -22,7 +22,7 @@ class AddictionTest extends BaseApiTestCase
 
         $addictionIri = $addiction['@id'];
 
-        $responseRetrieved = $this->request($addictionIri)->toArray();
+        $responseRetrieved = $this->request($addictionIri, [], $this->token)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
@@ -48,7 +48,7 @@ class AddictionTest extends BaseApiTestCase
             'json' => [
                 'totalAmount' => $newAmount
             ],
-        ]);
+        ], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertEquals($addiction['totalAmount'] + $newAmount, $addictionRetrieved['totalAmount']);
     }
@@ -56,7 +56,7 @@ class AddictionTest extends BaseApiTestCase
     public function testDeleteAddiction(): void
     {
         $addiction = $this->createAddiction();
-        $this->deleteRequest($addiction['@id']);
+        $this->deleteRequest($addiction['@id'], [], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
@@ -69,7 +69,7 @@ class AddictionTest extends BaseApiTestCase
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction['@id'];
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
