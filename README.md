@@ -20,3 +20,14 @@ make test
 ```
 
 
+# DOCKER COMPOSE STACK
+
+
+| service    | port | identifiant | password |
+|------------|------|-------------|----------|
+| API        | 8000 |             |          |
+| POSTGRESQL | 5432 | app         | addict   |
+| ADMINER    | 8080 | app         | addict   |
+
+
+

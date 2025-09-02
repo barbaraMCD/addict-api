@@ -15,38 +15,6 @@ abstract class BaseApiTestCase extends ApiTestCase
     {
         parent::setUp();
         self::bootKernel();
-        //    $container = self::getContainer();
-    }
-
-    /**
-     * Reset les séquences auto-increment pour éviter les conflits
-     */
-    private function resetDatabaseSequences(): void
-    {
-        try {
-            $em = self::getContainer()->get('doctrine')->getManager();
-            $connection = $em->getConnection();
-            $platform = $connection->getDatabasePlatform();
-
-            // Pour MySQL
-            if ($platform->getName() === 'mysql') {
-                $tables = ['user', 'addiction', 'consumption', 'trigger']; // Adaptez selon vos tables
-                foreach ($tables as $table) {
-                    $connection->executeStatement("ALTER TABLE {$table} AUTO_INCREMENT = 1");
-                }
-            }
-            // Pour PostgreSQL
-            elseif ($platform->getName() === 'postgresql') {
-                $sequences = $connection->fetchAllAssociative(
-                    "SELECT schemaname, sequencename FROM pg_sequences WHERE schemaname = 'public'"
-                );
-                foreach ($sequences as $sequence) {
-                    $connection->executeStatement("ALTER SEQUENCE {$sequence['sequencename']} RESTART WITH 1");
-                }
-            }
-        } catch (\Exception $e) {
-            // Ignore les erreurs de reset - pas critique
-        }
     }
 
     protected function request(string $endpoint, array $options = [], string $token = null): ResponseInterface
