@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use App\Controller\UserController;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -17,6 +18,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
@@ -32,14 +35,18 @@ use Symfony\Component\Uid\Uuid;
         new Get(
             normalizationContext: ['groups' => ['user:item:read', 'addiction:item:read']]
         ),
-        new Post(),
+        new Post(
+            uriTemplate: '/api/register',
+            controller: UserController::class,
+            name: 'register'
+        ),
         new Patch(),
         new Delete(),
     ],
     mercure: true
 )]
 #[ORM\HasLifecycleCallbacks]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     use TimestampableTrait;
     #[ORM\Id]
@@ -55,10 +62,10 @@ class User
     /**
      * @var string The hashed password
      */
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(length: 180, nullable: false)]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['user:item:read'])]
     private ?string $username = null;
 
@@ -140,5 +147,19 @@ class User
         }
 
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function eraseCredentials(): void
+    {
     }
 }

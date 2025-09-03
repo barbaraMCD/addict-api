@@ -4,10 +4,19 @@ namespace App\DataFixtures;
 
 use App\Entity\User;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends BaseFixtures
 {
     public const COUNT_NB_USER = 5;
+
+    private UserPasswordHasherInterface $passwordHasher;
+
+    public function __construct(UserPasswordHasherInterface $passwordHasher)
+    {
+        parent::__construct();
+        $this->passwordHasher = $passwordHasher;
+    }
 
     public function load(ObjectManager $manager): void
     {
@@ -15,7 +24,9 @@ class UserFixtures extends BaseFixtures
             $user = new User();
             $user->setEmail('user'.$i.'@test.local');
             $user->setUsername($this->faker->userName());
-            $user->setPassword($this->faker->password());
+
+            $hashedPassword = $this->passwordHasher->hashPassword($user, "test");
+            $user->setPassword($hashedPassword);
 
             $this->addReference('USER_'.$i, $user);
             $manager->persist($user);

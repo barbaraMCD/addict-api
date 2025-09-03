@@ -8,12 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ConsumptionTest extends BaseApiTestCase
 {
+    protected string $token;
+
     protected function setUp(): void
     {
-        parent::setUp();
-        self::bootKernel();
+        $this->token = $this->loginUser('user1@test.local');
     }
-
     public function testRetrieveConsumption(): void
     {
 
@@ -23,7 +23,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
@@ -53,7 +53,7 @@ class ConsumptionTest extends BaseApiTestCase
             'json' => [
                 'comment' => $comment
             ],
-        ]);
+        ], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertEquals($comment, $ConsumptionRetrieved['comment']);
     }
@@ -61,7 +61,7 @@ class ConsumptionTest extends BaseApiTestCase
     public function testDeleteConsumption(): void
     {
         $consumption = $this->createConsumption();
-        $this->deleteRequest($consumption['@id']);
+        $this->deleteRequest($consumption['@id'], [], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
@@ -85,6 +85,7 @@ class ConsumptionTest extends BaseApiTestCase
                     ]
                 ],
             ],
+            $this->token
         )->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -108,7 +109,7 @@ class ConsumptionTest extends BaseApiTestCase
         $userEmail = $this->generateRandomEmail();
 
         $user = $this->createUser($userEmail);
-        $userIri = $user['@id'];
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction["@id"];
@@ -116,12 +117,12 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $consumptionTwo = $this->createConsumption($addictionIri);
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -152,7 +153,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $addictionTwo = $this->createAddiction();
@@ -161,7 +162,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumptionTwo = $this->createConsumption($addictionTwoIri);
         $consumptionTwoIri = $consumptionTwo['@id'];
 
-        $this->request($consumptionIri)->toArray();
+        $this->request($consumptionIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -177,7 +178,7 @@ class ConsumptionTest extends BaseApiTestCase
 
         $this->assertJsonContains($response);
 
-        $this->request($consumptionTwoIri)->toArray();
+        $this->request($consumptionTwoIri, [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -197,8 +198,7 @@ class ConsumptionTest extends BaseApiTestCase
     public function testSearchFilterConsumption(): void
     {
         $user = $this->createUser();
-        $userId = $this->getIdFromObject($user);
-        $userIri = $user['@id'];
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction['@id'];
@@ -206,7 +206,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $userId)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $user['id'], [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [
@@ -234,7 +234,7 @@ class ConsumptionTest extends BaseApiTestCase
         $todayConsumption = $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('today'));
         $this->createConsumption($addictionIri, 1, new \DateTimeImmutable('yesterday'));
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'))->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'), [], $this->token)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertEquals(1, $responseRetrieved['hydra:totalItems']);

@@ -7,22 +7,24 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AddictionTest extends BaseApiTestCase
 {
+    protected string $token;
+
     protected function setUp(): void
     {
-        parent::setUp();
-        self::bootKernel();
+        $this->token = $this->loginUser('user1@test.local');
     }
 
     public function testRetrieveAddiction(): void
     {
         $user = $this->createUser($this->generateRandomEmail());
-        $userIri = $user['@id'];
+
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri, AddictionEnumType::CIGARETTES->value);
 
         $addictionIri = $addiction['@id'];
 
-        $responseRetrieved = $this->request($addictionIri)->toArray();
+        $responseRetrieved = $this->request($addictionIri, [], $this->token)->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
@@ -42,13 +44,14 @@ class AddictionTest extends BaseApiTestCase
         $newAmount = 100;
 
         $addiction = $this->createAddiction();
+
         $addictionIri = $addiction['@id'];
 
         $addictionRetrieved = $this->patchRequest($addictionIri, [
             'json' => [
                 'totalAmount' => $newAmount
             ],
-        ]);
+        ], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertEquals($addiction['totalAmount'] + $newAmount, $addictionRetrieved['totalAmount']);
     }
@@ -56,20 +59,19 @@ class AddictionTest extends BaseApiTestCase
     public function testDeleteAddiction(): void
     {
         $addiction = $this->createAddiction();
-        $this->deleteRequest($addiction['@id']);
+        $this->deleteRequest($addiction['@id'], [], $this->token);
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
     public function testSearchFilterAddiction(): void
     {
         $user = $this->createUser();
-        $userId = $this->getIdFromObject($user);
-        $userIri = $user['@id'];
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction['@id'];
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $user['id'], [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [

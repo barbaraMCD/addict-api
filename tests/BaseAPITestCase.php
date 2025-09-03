@@ -20,10 +20,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function request(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
-
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         return $client->request(Request::METHOD_GET, $endpoint, $options);
     }
 
@@ -31,9 +30,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     {
         $client = self::createClient();
 
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
@@ -44,9 +43,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function putRequest(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
@@ -57,9 +56,9 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function patchRequest(string $endpoint, array $options = [], string $token = null): array
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/merge-patch+json',
         ];
@@ -70,14 +69,41 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function deleteRequest(string $endpoint, array $options = [], string $token = null): ResponseInterface
     {
         $client = self::createClient();
-        /*        if ($token) {
-                    $options['auth_bearer'] = $token;
-                }*/
+        if ($token) {
+            $options['auth_bearer'] = $token;
+        }
         $options['headers'] = [
             'Content-Type' => 'application/ld+json',
         ];
 
         return $client->request(Request::METHOD_DELETE, $endpoint, $options);
+    }
+
+    protected function loginUser(string $email = null, string $password = "test"): string
+    {
+        if (!$email) {
+            $email = $this->generateRandomEmail();
+        }
+
+        $loginResponse = $this->postRequest(
+            TestEnum::ENDPOINT_LOGIN->value,
+            [
+                'json' => [
+                    'email' => $email,
+                    'password' => $password,
+                ],
+            ],
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $data = $loginResponse->toArray();
+        if (!isset($data['token'])) {
+            throw new \RuntimeException('Token not returned in login response.');
+        }
+
+        return $data['token'];
+
     }
 
     protected function createUser(string $email = null): array
@@ -88,7 +114,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         }
 
         $userResponse = $this->postRequest(
-            TestEnum::ENDPOINT_USERS->value,
+            TestEnum::ENDPOINT_REGISTER->value,
             [
                 'json' => [
                     'username' => 'JohnDoe',
@@ -105,9 +131,12 @@ abstract class BaseApiTestCase extends ApiTestCase
 
     protected function createAddiction(string $userIri = null, string $type = AddictionEnumType::CAFFEINE->value, int $totalAmount = 50): array
     {
+
+        $token = $this->loginUser('user1@test.local');
+
         if (!$userIri) {
             $userRetrievedData = $this->createUser();
-            $userIri = $userRetrievedData['@id'];
+            $userIri = $this->getIriFromId("users", $userRetrievedData['id']);
         }
 
         $addictionResponse = $this->postRequest(
@@ -119,6 +148,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'totalAmount' => $totalAmount
                 ],
             ],
+            $token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -128,6 +158,8 @@ abstract class BaseApiTestCase extends ApiTestCase
 
     protected function createConsumption(string $addictionIri = null, int $quantity = 2, \DateTimeImmutable $dateTime = null): array
     {
+        $token = $this->loginUser('user1@test.local');
+
         if (!$addictionIri) {
             $addictionRetrievedData = $this->createAddiction();
             $addictionIri = $addictionRetrievedData['@id'];
@@ -146,6 +178,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'date' => $dateTime->format('Y-m-d H:i:s'),
                 ],
             ],
+            $token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -166,6 +199,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'type' => $type
                 ],
             ],
+            $this->token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -176,6 +210,11 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function getIdFromObject($object): string
     {
         return substr($object['@id'], strrpos($object['@id'], '/') + 1);
+    }
+
+    protected function getIriFromId($type, $id): string
+    {
+        return "/".$type."/".$id;
     }
 
     public function generateRandomEmail(): string
