@@ -68,6 +68,23 @@ class UserTest extends BaseApiTestCase
         $this->assertArrayHasKey('refresh_token', $loginResponse);
     }
 
+    public function testCannotLoginUser(): void
+    {
+
+        $email = $this->generateRandomEmail();
+        $this->createUser($email);
+
+        $loginResponse = $this->postRequest(TestEnum::ENDPOINT_LOGIN->value, [
+            'json' => [
+                'email' => $email,
+                'password' => "wrongPassword"
+            ],
+        ]);
+
+        $loginResponse->toArray(false);
+        $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+    }
+
     public function testRefreshTokenRoute(): void
     {
 
