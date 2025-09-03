@@ -11,12 +11,10 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 
 abstract class BaseApiTestCase extends ApiTestCase
 {
-    protected string $token;
     protected function setUp(): void
     {
         parent::setUp();
         self::bootKernel();
-        $this->token = $this->loginUser('user1@test.local');
     }
 
     protected function request(string $endpoint, array $options = [], string $token = null): ResponseInterface
@@ -133,6 +131,9 @@ abstract class BaseApiTestCase extends ApiTestCase
 
     protected function createAddiction(string $userIri = null, string $type = AddictionEnumType::CAFFEINE->value, int $totalAmount = 50): array
     {
+
+        $token = $this->loginUser('user1@test.local');
+
         if (!$userIri) {
             $userRetrievedData = $this->createUser();
             $userIri = $this->getIriFromId("users", $userRetrievedData['id']);
@@ -147,7 +148,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'totalAmount' => $totalAmount
                 ],
             ],
-            $this->token
+            $token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -157,6 +158,8 @@ abstract class BaseApiTestCase extends ApiTestCase
 
     protected function createConsumption(string $addictionIri = null, int $quantity = 2, \DateTimeImmutable $dateTime = null): array
     {
+        $token = $this->loginUser('user1@test.local');
+
         if (!$addictionIri) {
             $addictionRetrievedData = $this->createAddiction();
             $addictionIri = $addictionRetrievedData['@id'];
@@ -175,7 +178,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'date' => $dateTime->format('Y-m-d H:i:s'),
                 ],
             ],
-            $this->token
+            $token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);

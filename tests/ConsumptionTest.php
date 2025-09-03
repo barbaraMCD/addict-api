@@ -8,12 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ConsumptionTest extends BaseApiTestCase
 {
+    protected string $token;
+
     protected function setUp(): void
     {
-        parent::setUp();
-        self::bootKernel();
+        $this->token = $this->loginUser('user1@test.local');
     }
-
     public function testRetrieveConsumption(): void
     {
 

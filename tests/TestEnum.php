@@ -14,4 +14,6 @@ enum TestEnum: string
 
     case ENDPOINT_LOGIN = '/api/login_check';
 
+    case ENDPOINT_REFRESH_TOKEN = '/api/token/refresh';
+
 }
