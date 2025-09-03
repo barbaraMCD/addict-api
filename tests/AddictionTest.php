@@ -16,7 +16,8 @@ class AddictionTest extends BaseApiTestCase
     public function testRetrieveAddiction(): void
     {
         $user = $this->createUser($this->generateRandomEmail());
-        $userIri = $user['@id'];
+
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri, AddictionEnumType::CIGARETTES->value);
 
@@ -42,6 +43,7 @@ class AddictionTest extends BaseApiTestCase
         $newAmount = 100;
 
         $addiction = $this->createAddiction();
+
         $addictionIri = $addiction['@id'];
 
         $addictionRetrieved = $this->patchRequest($addictionIri, [
@@ -63,13 +65,12 @@ class AddictionTest extends BaseApiTestCase
     public function testSearchFilterAddiction(): void
     {
         $user = $this->createUser();
-        $userId = $this->getIdFromObject($user);
-        $userIri = $user['@id'];
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction['@id'];
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $userId, [], $this->token)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $user['id'], [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [

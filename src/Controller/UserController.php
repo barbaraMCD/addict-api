@@ -28,7 +28,7 @@ class UserController extends AbstractController
         $user = $this->userService->registerUser($data);
 
         return new JsonResponse([
-            'message' => "User créé avec succès!",
+            'id' => $user->getId(),
             'email' => $user->getEmail()
         ], Response::HTTP_CREATED);
     }

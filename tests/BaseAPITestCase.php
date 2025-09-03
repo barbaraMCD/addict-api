@@ -116,7 +116,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         }
 
         $userResponse = $this->postRequest(
-            TestEnum::ENDPOINT_USERS->value,
+            TestEnum::ENDPOINT_REGISTER->value,
             [
                 'json' => [
                     'username' => 'JohnDoe',
@@ -135,7 +135,7 @@ abstract class BaseApiTestCase extends ApiTestCase
     {
         if (!$userIri) {
             $userRetrievedData = $this->createUser();
-            $userIri = $userRetrievedData['@id'];
+            $userIri = $this->getIriFromId("users", $userRetrievedData['id']);
         }
 
         $addictionResponse = $this->postRequest(
@@ -207,6 +207,11 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function getIdFromObject($object): string
     {
         return substr($object['@id'], strrpos($object['@id'], '/') + 1);
+    }
+
+    protected function getIriFromId($type, $id): string
+    {
+        return "/".$type."/".$id;
     }
 
     public function generateRandomEmail(): string

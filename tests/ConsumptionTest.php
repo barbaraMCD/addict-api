@@ -84,8 +84,8 @@ class ConsumptionTest extends BaseApiTestCase
                         $triggerFriends['@id']
                     ]
                 ],
-                $this->token
             ],
+            $this->token
         )->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -109,7 +109,7 @@ class ConsumptionTest extends BaseApiTestCase
         $userEmail = $this->generateRandomEmail();
 
         $user = $this->createUser($userEmail);
-        $userIri = $user['@id'];
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction["@id"];
@@ -198,8 +198,7 @@ class ConsumptionTest extends BaseApiTestCase
     public function testSearchFilterConsumption(): void
     {
         $user = $this->createUser();
-        $userId = $this->getIdFromObject($user);
-        $userIri = $user['@id'];
+        $userIri = $this->getIriFromId("users", $user['id']);
 
         $addiction = $this->createAddiction($userIri);
         $addictionIri = $addiction['@id'];
@@ -207,7 +206,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumption = $this->createConsumption($addictionIri);
         $consumptionIri = $consumption['@id'];
 
-        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $userId, [], $this->token)->toArray();
+        $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $user['id'], [], $this->token)->toArray();
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
         $response = [

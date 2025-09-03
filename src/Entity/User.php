@@ -38,7 +38,7 @@ use Symfony\Component\Uid\Uuid;
         new Post(
             uriTemplate: '/api/register',
             controller: UserController::class,
-            name: 'users'
+            name: 'register'
         ),
         new Patch(),
         new Delete(),
