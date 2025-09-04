@@ -2,6 +2,10 @@ name: CI
 
 on: [push, pull_request]  # Lint et tests sur toutes les branches
 
+env:
+  TEST_IMAGE_NAME: app-test
+  PROD_IMAGE_NAME: app-prod
+
 jobs:
   lint:
     name: "Lint & Code Quality"
@@ -41,10 +45,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build test image
-        run: docker build -t app-test .
+        run: docker build -t ${{ env.TEST_IMAGE_NAME }} .
 
       - name: Save test image
-        run: docker save app-test > app-test.tar
+        run: docker save ${{ env.TEST_IMAGE_NAME }} > app-test.tar
 
       - name: Upload test image artifact
         uses: actions/upload-artifact@v4
@@ -94,8 +98,16 @@ jobs:
             --network host \
             -e APP_ENV=test \
             -e DATABASE_URL="mysql://app:app@localhost:3306/app_test" \
-            app-test \
-            php bin/phpunit
+            -e JWT_PASSPHRASE="a9fbaa6f7c5f60a8944f21156c28abead68fc6fd9b59ceb859660971dc2f7c9f" \
+            ${{ env.TEST_IMAGE_NAME }} \
+            sh -c "
+              mkdir -p config/jwt &&
+              openssl genpkey -out config/jwt/private.pem -aes256 -pass pass:\$JWT_PASSPHRASE -algorithm RSA -pkeyopt rsa_keygen_bits:4096 &&
+              openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:\$JWT_PASSPHRASE -pubout &&
+              php bin/console doctrine:database:create --if-not-exists &&
+              php bin/console doctrine:migrations:migrate --no-interaction &&
+              php bin/phpunit
+            "
 
   build-prod-image:
     name: "Build Production Image"
@@ -112,7 +124,7 @@ jobs:
           docker build \
             --build-arg APP_ENV=prod \
             --target production \
-            -t app-prod:${{ github.sha }} \
+            -t ${{ env.PROD_IMAGE_NAME }}:${{ github.sha }} \
             .
 
       - name: Log in to registry (si tu veux push)
