@@ -63,15 +63,14 @@ jobs:
 
     services:
       database:
-        image: mysql:8.0
+        image: postgres:15
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: app_test
-          MYSQL_USER: app
-          MYSQL_PASSWORD: app
+          POSTGRES_DB: addict
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: addict
         ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: Checkout code
@@ -87,7 +86,7 @@ jobs:
 
       - name: Wait for database
         run: |
-          until nc -z localhost 3306; do
+          until nc -z localhost 5432; do
             echo "Waiting for database..."
             sleep 1
           done
@@ -97,13 +96,9 @@ jobs:
           docker run --rm \
             --network host \
             -e APP_ENV=test \
-            -e DATABASE_URL="mysql://app:app@localhost:3306/app_test" \
-            -e JWT_PASSPHRASE="a9fbaa6f7c5f60a8944f21156c28abead68fc6fd9b59ceb859660971dc2f7c9f" \
+            -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
             sh -c "
-              mkdir -p config/jwt &&
-              openssl genpkey -out config/jwt/private.pem -aes256 -pass pass:\$JWT_PASSPHRASE -algorithm RSA -pkeyopt rsa_keygen_bits:4096 &&
-              openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:\$JWT_PASSPHRASE -pubout &&
               php bin/console doctrine:database:create --if-not-exists &&
               php bin/console doctrine:migrations:migrate --no-interaction &&
               php bin/phpunit
