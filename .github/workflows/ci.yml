@@ -3,8 +3,8 @@ name: CI
 on: [push, pull_request]  # Lint et tests sur toutes les branches
 
 env:
-  TEST_IMAGE_NAME: app-test
-  PROD_IMAGE_NAME: app-prod
+  TEST_IMAGE_NAME: ${{ secrets.TEST_IMAGE_NAME }}
+  PROD_IMAGE_NAME: ${{ secrets.PROD_IMAGE_NAME }}
 
 jobs:
   lint:
@@ -98,10 +98,12 @@ jobs:
             -e APP_ENV=test \
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
-            sh -c "
-              php bin/console doctrine:database:create --if-not-exists &&
-              php bin/console doctrine:migrations:migrate --no-interaction &&
-              php bin/phpunit
+             sh -c "
+              php bin/console doctrine:database:drop --force --env=test || true &&
+              php bin/console doctrine:database:create --env=test &&
+              php bin/console doctrine:migrations:migrate -n --env=test &&
+              php bin/console doctrine:fixtures:load -n --env=test &&
+              php bin/phpunit tests --testdox
             "
 
   build-prod-image:
