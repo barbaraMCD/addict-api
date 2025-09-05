@@ -91,6 +91,20 @@ jobs:
             sleep 1
           done
 
+      - name: Debug final setup (if tests fail)
+        if: failure()
+        run: |
+          echo "=== DEBUGGING TEST FAILURE ==="
+          docker run --rm ${{ env.TEST_IMAGE_NAME }} sh -c "
+            echo 'PHP Version:' && php --version &&
+            echo 'Composer packages (API Platform related):' &&
+            composer show | grep -E '(api-platform|phpunit|symfony)' &&
+            echo 'Tests directory:' && ls -la tests/ &&
+            echo 'PHPUnit config:' && cat phpunit.xml &&
+            echo 'Autoload test:' && 
+            php -r 'require \"vendor/autoload.php\"; echo class_exists(\"ApiPlatform\\\\Symfony\\\\Bundle\\\\Test\\\\ApiTestCase\") ? \"ApiTestCase OK\" : \"ApiTestCase MISSING\"; echo \"\\n\";'
+          "
+
       - name: Run tests
         run: |
           docker run --rm \
@@ -99,17 +113,12 @@ jobs:
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
             sh -c "
-              echo 'Trying to test BaseApiTestCase loading specifically:' &&
-              php -r 'require_once \"vendor/autoload.php\"; class_exists(\"App\\\\Tests\\\\BaseApiTestCase\") ? print(\"BaseApiTestCase can be loaded\") : print(\"BaseApiTestCase CANNOT be loaded\");' &&
-              echo '' &&
-              echo 'Testing single file first:' &&
               php bin/console doctrine:database:drop --force --env=test || true &&
               php bin/console doctrine:database:create --env=test &&
               php bin/console doctrine:migrations:migrate -n --env=test &&
               php bin/console doctrine:fixtures:load -n --env=test &&
-              ./vendor/bin/simple-phpunit tests/BaseApiTestCase.php --testdox || echo 'BaseApiTestCase test failed' &&
-              echo 'Now testing AddictionTest specifically:' &&
-              ./vendor/bin/simple-phpunit tests/AddictionTest.php --testdox
+              echo 'Starting PHPUnit tests...' &&
+              php bin/phpunit --verbose
             "
 
   build-prod-image:
@@ -140,4 +149,4 @@ jobs:
 
       - name: Push to registry (si tu veux push)
         # run: docker push ghcr.io/${{ github.repository }}/${{ env.PROD_IMAGE_NAME }}:${{ github.sha }}
-        run: echo "Push to registry here"
+        run: echo "Push to registry here
