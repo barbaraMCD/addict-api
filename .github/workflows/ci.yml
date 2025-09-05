@@ -120,7 +120,7 @@ jobs:
               echo 'Checking phpunit.xml configuration:' &&
               cat phpunit.xml &&
               echo 'Trying to run tests with explicit directory:' &&
-              php bin/phpunit tests --verbose --testdox
+              php bin/phpunit tests --bootstrap tests/bootstrap.php --verbose --testdox
             "
 
   build-prod-image:
