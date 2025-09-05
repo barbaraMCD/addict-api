@@ -102,7 +102,12 @@ jobs:
               else 
                 echo 'tests directory NOT found'
             fi &&
-            make test
+            echo 'Looking for any test files anywhere:' && find . -name '*Test.php' -type f &&
+              php bin/console doctrine:database:drop --force --env=test || true &&
+              php bin/console doctrine:database:create --env=test &&
+              php bin/console doctrine:migrations:migrate -n --env=test &&
+              php bin/console doctrine:fixtures:load -n --env=test &&
+              php bin/phpunit --testdox
           "
 
   build-prod-image:
