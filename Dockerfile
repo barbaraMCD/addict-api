@@ -37,6 +37,14 @@ RUN set -eux; \
 	composer install --prefer-dist --no-scripts --no-progress --no-suggest; \
 	composer clear-cache
 
+FROM builder as test
+
+COPY ./ ./
+
+# Install dev dependencies for testing
+RUN composer install --dev --prefer-dist --optimize-autoloader
+
+
 FROM builder as runner
 
 COPY ./ ./

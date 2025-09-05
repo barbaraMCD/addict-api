@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build test image
-        run: docker build -t ${{ env.TEST_IMAGE_NAME }} .
+        run: docker build --target test -t ${{ env.TEST_IMAGE_NAME }} .
 
       - name: Save test image
         run: docker save ${{ env.TEST_IMAGE_NAME }} > ${{ env.TEST_IMAGE_NAME }}.tar
