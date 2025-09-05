@@ -28,7 +28,7 @@ jobs:
         run: find src -name "*.php" -exec php -l {} \;
 
       - name: PHP CS Fixer (dry-run)
-        run:  make lint-check
+        run: make lint-check
 
   build-test-image:
     name: "Build Test Image"
@@ -43,13 +43,13 @@ jobs:
         run: docker build -t ${{ env.TEST_IMAGE_NAME }} .
 
       - name: Save test image
-        run: docker save ${{ env.TEST_IMAGE_NAME }} > app-test.tar
+        run: docker save ${{ env.TEST_IMAGE_NAME }} > ${{ env.TEST_IMAGE_NAME }}.tar
 
       - name: Upload test image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-test-image
-          path: app-test.tar
+          name: ${{ env.TEST_IMAGE_NAME }}-image
+          path: ${{ env.TEST_IMAGE_NAME }}.tar
 
   tests:
     name: "Run Tests"
@@ -74,10 +74,10 @@ jobs:
       - name: Download test image
         uses: actions/download-artifact@v4
         with:
-          name: app-test-image
+          name: ${{ env.TEST_IMAGE_NAME }}-image
 
       - name: Load test image
-        run: docker load < app-test.tar
+        run: docker load < ${{ env.TEST_IMAGE_NAME }}.tar
 
       - name: Wait for database
         run: |
@@ -93,7 +93,17 @@ jobs:
             -e APP_ENV=test \
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
-             make test
+           sh -c "
+              echo 'Current directory:' && pwd &&
+              echo 'Listing all files and directories:' && ls -la &&
+              echo 'Checking if tests directory exists:' && 
+              if [ -d tests ]; then 
+                echo 'tests directory found!' && ls -la tests/
+              else 
+                echo 'tests directory NOT found'
+            fi &&
+            make test
+          "
 
   build-prod-image:
     name: "Build Production Image"
@@ -122,5 +132,5 @@ jobs:
         run: echo "Login to registry here"
 
       - name: Push to registry (si tu veux push)
-        # run: docker push ghcr.io/${{ github.repository }}/app:${{ github.sha }}
+        # run: docker push ghcr.io/${{ github.repository }}/${{ env.PROD_IMAGE_NAME }}:${{ github.sha }}
         run: echo "Push to registry here"
