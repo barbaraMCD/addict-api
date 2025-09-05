@@ -94,20 +94,15 @@ jobs:
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
            sh -c "
-              echo 'Current directory:' && pwd &&
-              echo 'Listing all files and directories:' && ls -la &&
-              echo 'Checking if tests directory exists:' && 
-              if [ -d tests ]; then 
-                echo 'tests directory found!' && ls -la tests/
-              else 
-                echo 'tests directory NOT found'
-            fi &&
-            echo 'Looking for any test files anywhere:' && find . -name '*Test.php' -type f &&
-              php bin/console doctrine:database:drop --force --env=test || true &&
-              php bin/console doctrine:database:create --env=test &&
-              php bin/console doctrine:migrations:migrate -n --env=test &&
-              php bin/console doctrine:fixtures:load -n --env=test &&
-              php bin/phpunit --testdox
+            pwd && 
+            ls -la &&
+            ls -la tests/ &&
+            php bin/console doctrine:database:drop --force --env=test || true &&
+            php bin/console doctrine:database:create --env=test &&
+            php bin/console doctrine:migrations:migrate -n --env=test &&
+            php bin/console doctrine:fixtures:load -n --env=test &&
+            ./vendor/bin/phpunit --version &&
+            ./vendor/bin/phpunit tests/ --testdox
           "
 
   build-prod-image:
