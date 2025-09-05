@@ -25,9 +25,7 @@
 docs/
 public/bundles/
 var/
-vendor/
 .editorconfig
 .env.*.local
 .env.local
 .env.local.php
-.env.test
