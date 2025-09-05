@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]  # Lint et tests sur toutes les branches
+on: [push]
 
 env:
   TEST_IMAGE_NAME: ${{ secrets.TEST_IMAGE_NAME }}
