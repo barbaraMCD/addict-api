@@ -5,6 +5,7 @@ on: [push, pull_request]  # Lint et tests sur toutes les branches
 env:
   TEST_IMAGE_NAME: ${{ secrets.TEST_IMAGE_NAME }}
   PROD_IMAGE_NAME: ${{ secrets.PROD_IMAGE_NAME }}
+  JWT_PASSPHRASE: ${{ secrets.JWT_PASSPHRASE }}
 
 jobs:
   lint:
@@ -119,6 +120,12 @@ jobs:
               php bin/console doctrine:fixtures:load -n --env=test &&
               echo 'Checking if phpunit.xml exists:' &&
               ls -la phpunit.xml* || echo 'No phpunit.xml found' &&
+              echo 'Checking JWT keys:' &&
+              ls -la config/jwt/ || echo 'No JWT keys found' &&
+              echo 'Creating JWT keys for tests:' &&
+              mkdir -p config/jwt &&
+              openssl genpkey -out config/jwt/private.pem -aes256 -pass pass:${{ env.JWT_PASSPHRASE }} -algorithm RSA -pkeyopt rsa_keygen_bits:4096 &&
+              openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:${{ env.JWT_PASSPHRASE }} -pubout &&
               echo 'Running tests with explicit bootstrap:' &&
               php bin/phpunit tests --bootstrap tests/bootstrap.php --verbose --testdox
             "
