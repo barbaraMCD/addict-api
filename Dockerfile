@@ -37,13 +37,12 @@ RUN set -eux; \
 	composer install --prefer-dist --no-scripts --no-progress --no-suggest; \
 	composer clear-cache
 
-FROM builder as test
+FROM system as test
 
-COPY ./ ./
-
-# Install dev dependencies for testing
+COPY composer.json composer.lock symfony.lock ./
 RUN composer install --dev --prefer-dist --optimize-autoloader
 
+COPY ./ ./
 
 FROM builder as runner
 
