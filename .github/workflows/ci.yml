@@ -28,13 +28,8 @@ jobs:
         run: find src -name "*.php" -exec php -l {} \;
 
       - name: PHP CS Fixer (dry-run)
-        run: |
-          if [ -f .php-cs-fixer.php ]; then
-            vendor/bin/php-cs-fixer fix --dry-run --diff
-          else
-            echo "No PHP CS Fixer config found, skipping"
-          fi
-
+        run:  make lint-check
+        
   build-test-image:
     name: "Build Test Image"
     runs-on: ubuntu-latest

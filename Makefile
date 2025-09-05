@@ -49,10 +49,13 @@ cli:
 cli-test:
 	$(DOCKER_COMPOSE) exec api-test bash
 
-prettier:
+lint: ## fix code style with PHP CS Fixer
 	docker run -v ${PWD}/src:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
 	docker run -v ${PWD}/tests:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix -- /code
 
+lint-check: ## check code style for CI (dry-run)
+	docker run -v ${PWD}/src:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix --dry-run --diff -- /code
+	docker run -v ${PWD}/tests:/code ghcr.io/php-cs-fixer/php-cs-fixer:3.48-php8.2 fix --dry-run --diff -- /code
+
 entity:
 	$(DOCKER_COMPOSE) run --rm api php bin/console make:entity
-
