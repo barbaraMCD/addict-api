@@ -99,20 +99,17 @@ jobs:
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
             sh -c "
-              echo '=== Debug autoloading issue ===' &&
-              echo 'Files in tests directory:' &&
-              ls -la tests/ &&
-              echo 'Content of AddictionTest.php (first 15 lines):' &&
-              head -15 tests/AddictionTest.php &&
-              echo 'Content of BaseApiTestCase.php (first 10 lines):' &&
-              head -10 tests/BaseApiTestCase.php &&
-              echo 'Regenerating autoload:' &&
-              composer dump-autoload &&
+              echo 'Trying to test BaseApiTestCase loading specifically:' &&
+              php -r 'require_once \"vendor/autoload.php\"; class_exists(\"App\\\\Tests\\\\BaseApiTestCase\") ? print(\"BaseApiTestCase can be loaded\") : print(\"BaseApiTestCase CANNOT be loaded\");' &&
+              echo '' &&
+              echo 'Testing single file first:' &&
               php bin/console doctrine:database:drop --force --env=test || true &&
               php bin/console doctrine:database:create --env=test &&
               php bin/console doctrine:migrations:migrate -n --env=test &&
               php bin/console doctrine:fixtures:load -n --env=test &&
-              ./vendor/bin/simple-phpunit tests --testdox
+              ./vendor/bin/simple-phpunit tests/BaseApiTestCase.php --testdox || echo 'BaseApiTestCase test failed' &&
+              echo 'Now testing AddictionTest specifically:' &&
+              ./vendor/bin/simple-phpunit tests/AddictionTest.php --testdox
             "
 
   build-prod-image:
