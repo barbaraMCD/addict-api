@@ -1,0 +1,161 @@
+name: CI
+
+on: [push]
+
+env:
+  TEST_IMAGE_NAME: ${{ secrets.TEST_IMAGE_NAME }}
+  PROD_IMAGE_NAME: ${{ secrets.PROD_IMAGE_NAME }}
+  JWT_PASSPHRASE: ${{ secrets.JWT_PASSPHRASE }}
+
+jobs:
+  lint:
+    name: "Lint & Code Quality"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Check PHP syntax
+        run: find src -name "*.php" -exec php -l {} \;
+
+      - name: PHP CS Fixer (dry-run)
+        run: |
+          if [ -f .php-cs-fixer.php ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff
+          else
+            echo "No PHP CS Fixer config found, skipping"
+          fi
+
+  build-test-image:
+    name: "Build Test Image"
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: docker build --no-cache --target test -t ${{ env.TEST_IMAGE_NAME }} .
+
+      - name: Save test image
+        run: docker save ${{ env.TEST_IMAGE_NAME }} > ${{ env.TEST_IMAGE_NAME }}.tar
+
+      - name: Upload test image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TEST_IMAGE_NAME }}-image
+          path: ${{ env.TEST_IMAGE_NAME }}.tar
+
+  tests:
+    name: "Run Tests"
+    runs-on: ubuntu-latest
+    needs: build-test-image
+
+    services:
+      database:
+        image: postgres:15
+        env:
+          POSTGRES_DB: addict
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: addict
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download test image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.TEST_IMAGE_NAME }}-image
+
+      - name: Load test image
+        run: docker load < ${{ env.TEST_IMAGE_NAME }}.tar
+
+      - name: Wait for database
+        run: |
+          until nc -z localhost 5432; do
+            echo "Waiting for database..."
+            sleep 1
+          done
+
+      - name: Debug final setup (if tests fail)
+        if: failure()
+        run: |
+          echo "=== DEBUGGING TEST FAILURE ==="
+          docker run --rm ${{ env.TEST_IMAGE_NAME }} sh -c "
+            echo 'PHP Version:' && php --version &&
+            echo 'Composer packages (API Platform related):' &&
+            composer show | grep -E '(api-platform|phpunit|symfony)' &&
+            echo 'Tests directory:' && ls -la tests/ &&
+            echo 'PHPUnit config:' && cat phpunit.xml &&
+            echo 'Autoload test:' && 
+            php -r 'require \"vendor/autoload.php\"; echo class_exists(\"ApiPlatform\\\\Symfony\\\\Bundle\\\\Test\\\\ApiTestCase\") ? \"ApiTestCase OK\" : \"ApiTestCase MISSING\"; echo \"\\n\";'
+          "
+
+      - name: Run tests
+        run: |
+          docker run --rm \
+            --network host \
+            -e APP_ENV=test \
+            -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
+            ${{ env.TEST_IMAGE_NAME }} \
+            sh -c "
+              php bin/console doctrine:database:drop --force --env=test || true &&
+              php bin/console doctrine:database:create --env=test &&
+              php bin/console doctrine:migrations:migrate -n --env=test &&
+              php bin/console doctrine:fixtures:load -n --env=test &&
+              echo 'Checking if phpunit.xml exists:' &&
+              ls -la phpunit.xml* || echo 'No phpunit.xml found' &&
+              echo 'Checking JWT keys:' &&
+              ls -la config/jwt/ || echo 'No JWT keys found' &&
+              echo 'Creating JWT keys for tests:' &&
+              mkdir -p config/jwt &&
+              openssl genpkey -out config/jwt/private.pem -aes256 -pass pass:${{ env.JWT_PASSPHRASE }} -algorithm RSA -pkeyopt rsa_keygen_bits:4096 &&
+              openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:${{ env.JWT_PASSPHRASE }} -pubout &&
+              echo 'Running tests with explicit bootstrap:' &&
+              php bin/phpunit tests --bootstrap tests/bootstrap.php --verbose --testdox
+            "
+
+  build-prod-image:
+    name: "Build Production Image"
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build production image
+        run: |
+          docker build \
+            --build-arg APP_ENV=prod \
+            --target production \
+            -t ${{ env.PROD_IMAGE_NAME }}:${{ github.sha }} \
+            .
+
+      - name: Log in to registry (si tu veux push)
+        # uses: docker/login-action@v3
+        # with:
+        #   registry: ghcr.io
+        #   username: ${{ github.actor }}
+        #   password: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "Login to registry here"
+
+      - name: Push to registry (si tu veux push)
+        # run: docker push ghcr.io/${{ github.repository }}/${{ env.PROD_IMAGE_NAME }}:${{ github.sha }}
+        run: echo "Push to registry here"

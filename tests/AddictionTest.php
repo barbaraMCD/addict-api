@@ -4,6 +4,7 @@ namespace App\Tests;
 
 use App\Enum\AddictionEnumType;
 use Symfony\Component\HttpFoundation\Response;
+use App\Tests\BaseApiTestCase;
 
 class AddictionTest extends BaseApiTestCase
 {

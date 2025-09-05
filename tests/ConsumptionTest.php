@@ -5,6 +5,7 @@ namespace App\Tests;
 use App\Enum\AddictionEnumType;
 use App\Enum\TriggerEnumType;
 use Symfony\Component\HttpFoundation\Response;
+use App\Tests\BaseApiTestCase;
 
 class ConsumptionTest extends BaseApiTestCase
 {
