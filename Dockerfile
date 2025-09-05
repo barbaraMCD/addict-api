@@ -37,15 +37,17 @@ RUN set -eux; \
 	composer install --prefer-dist --no-scripts --no-progress --no-suggest; \
 	composer clear-cache
 
-FROM system as test
+FROM builder as test
 
-COPY composer.json composer.lock symfony.lock ./
+COPY ./ ./
 
-RUN set -eux; \
-	composer install --prefer-dist --dev --optimize-autoloader \
-	composer clear-cache
+RUN rm -rf vendor/ && \
+    composer install --prefer-dist --optimize-autoloader
 
-FROM test as runner
+
+
+
+FROM builder as runner
 
 COPY ./ ./
 
