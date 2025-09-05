@@ -144,7 +144,7 @@ jobs:
         run: |
           docker build \
             --build-arg APP_ENV=prod \
-            --target production \
+            --target runner \
             -t ${{ env.PROD_IMAGE_NAME }}:${{ github.sha }} \
             .
 
