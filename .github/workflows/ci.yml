@@ -29,7 +29,7 @@ jobs:
 
       - name: PHP CS Fixer (dry-run)
         run:  make lint-check
-        
+
   build-test-image:
     name: "Build Test Image"
     runs-on: ubuntu-latest
@@ -93,13 +93,7 @@ jobs:
             -e APP_ENV=test \
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
-             sh -c "
-              php bin/console doctrine:database:drop --force --env=test || true &&
-              php bin/console doctrine:database:create --env=test &&
-              php bin/console doctrine:migrations:migrate -n --env=test &&
-              php bin/console doctrine:fixtures:load -n --env=test &&
-              php bin/phpunit tests --testdox
-            "
+             make test
 
   build-prod-image:
     name: "Build Production Image"
