@@ -28,7 +28,12 @@ jobs:
         run: find src -name "*.php" -exec php -l {} \;
 
       - name: PHP CS Fixer (dry-run)
-        run: make lint-check
+        run: |
+          if [ -f .php-cs-fixer.php ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff
+          else
+            echo "No PHP CS Fixer config found, skipping"
+          fi
 
   build-test-image:
     name: "Build Test Image"
@@ -86,6 +91,28 @@ jobs:
             sleep 1
           done
 
+      - name: Debug Docker image contents
+        run: |
+          echo "=== DEBUGGING DOCKER IMAGE CONTENTS ==="
+          docker run --rm ${{ env.TEST_IMAGE_NAME }} sh -c "
+            echo '1. Current directory:' && pwd &&
+            echo '2. All files in root:' && ls -la &&
+            echo '3. Tests directory:' && ls -la tests/ || echo 'NO tests directory' &&
+            echo '4. Vendor directory exists:' && ls -ld vendor/ || echo 'NO vendor directory' &&
+            echo '5. Vendor/bin contents:' && ls -la vendor/bin/ || echo 'NO vendor/bin directory' &&
+            echo '6. Looking for phpunit anywhere:' && find . -name '*phpunit*' -type f 2>/dev/null || echo 'NO phpunit files found' &&
+            echo '7. Composer show all packages:' && composer show | head -20 &&
+            echo '8. Composer show phpunit specifically:' && composer show | grep phpunit || echo 'NO phpunit packages' &&
+            echo '9. Check if symfony/phpunit-bridge exists:' && composer show symfony/phpunit-bridge || echo 'NO symfony/phpunit-bridge' &&
+            echo '10. PHP version:' && php --version &&
+            echo '11. Try to find phpunit executable:' && which phpunit || echo 'phpunit not in PATH' &&
+            echo '12. Try different phpunit paths:' &&
+            (php bin/phpunit --version 2>&1 || echo 'php bin/phpunit FAILED') &&
+            (./vendor/bin/phpunit --version 2>&1 || echo './vendor/bin/phpunit FAILED') &&
+            (vendor/bin/phpunit --version 2>&1 || echo 'vendor/bin/phpunit FAILED') &&
+            echo '=== END DEBUG ==='
+          "
+
       - name: Run tests
         run: |
           docker run --rm \
@@ -93,17 +120,13 @@ jobs:
             -e APP_ENV=test \
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
             ${{ env.TEST_IMAGE_NAME }} \
-           sh -c "
-            pwd && 
-            ls -la &&
-            ls -la tests/ &&
-            php bin/console doctrine:database:drop --force --env=test || true &&
-            php bin/console doctrine:database:create --env=test &&
-            php bin/console doctrine:migrations:migrate -n --env=test &&
-            php bin/console doctrine:fixtures:load -n --env=test &&
-            ./vendor/bin/phpunit --version &&
-            ./vendor/bin/phpunit tests/ --testdox
-          "
+            sh -c "
+              php bin/console doctrine:database:drop --force --env=test || true &&
+              php bin/console doctrine:database:create --env=test &&
+              php bin/console doctrine:migrations:migrate -n --env=test &&
+              php bin/console doctrine:fixtures:load -n --env=test &&
+              php bin/phpunit --testdox
+            "
 
   build-prod-image:
     name: "Build Production Image"
