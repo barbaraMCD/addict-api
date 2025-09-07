@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Entity\Filter\ActiveSubscriptionFilter;
+use App\Entity\Filter\NonAnonymizedUserFilter;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Subscription\PlanType;
 use App\Repository\SubscriptionRepository;
@@ -21,9 +22,10 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 #[ApiFilter(ActiveSubscriptionFilter::class)]
+#[ApiFilter(NonAnonymizedUserFilter::class)]
 #[ApiFilter(
     filterClass: SearchFilter::class,
-    properties: ['user.id' => 'iexact', 'stripeCustomerId' => 'iexact', "user" => 'exact']
+    properties: ['user.id' => 'exact', 'stripeCustomerId' => 'iexact']
 )]
 #[ORM\HasLifecycleCallbacks]
 #[ApiResource(
@@ -31,7 +33,6 @@ use Symfony\Component\Uid\Uuid;
         new GetCollection(),
         new Get(),
         new Post(),
-        new Put()
     ],
 )]
 class Subscription

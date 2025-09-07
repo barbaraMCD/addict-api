@@ -210,7 +210,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $triggerResponse->toArray();
     }
 
-    protected function createSubscription(string $userIri = null): array
+    protected function createSubscription(string $userIri = null, string $currentPeriodEnd = "2026-05-31 19:48:17+00"): array
     {
         $token = $this->loginUser('user1@test.local');
 
@@ -227,7 +227,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     "stripeCustomerId" => "23456789",
                     "planType" => "monthly",
                     "currentPeriodStart" => "2025-05-31 19:48:17+00",
-                    "currentPeriodEnd" => "2025-09-31 19:48:17+00"
+                    "currentPeriodEnd" => $currentPeriodEnd
                 ],
             ],
             $token
