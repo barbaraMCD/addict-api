@@ -18,16 +18,13 @@ class AddictionFixtures extends BaseFixtures implements DependentFixtureInterfac
 
     public function load(ObjectManager $manager): void
     {
-        $users = [
-            $this->getReference('USER_1'),
-            $this->getReference('USER_2'),
-            $this->getReference('USER_3'),
-        ];
 
         foreach (AddictionType::cases() as $i => $case) {
             $addiction = new Addiction();
             $addiction->setType($case);
-            $addiction->setUser($users[$i % count($users)]);
+
+            $user = $this->getReference('USER_' . rand(1, UserFixtures::COUNT_NB_USER));
+            $addiction->setUser($user);
 
             $this->addReference('ADDICTION_'.$i, $addiction);
             $manager->persist($addiction);

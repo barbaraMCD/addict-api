@@ -2,11 +2,14 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use App\Entity\Filter\ActiveSubscriptionFilter;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\Subscription\PlanType;
 use App\Repository\SubscriptionRepository;
@@ -17,6 +20,12 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
+#[ApiFilter(ActiveSubscriptionFilter::class)]
+#[ApiFilter(
+    filterClass: SearchFilter::class,
+    properties: ['user.id' => 'iexact', 'stripeCustomerId' => 'iexact', "user" => 'exact']
+)]
+#[ORM\HasLifecycleCallbacks]
 #[ApiResource(
     operations: [
         new GetCollection(),
@@ -44,10 +53,10 @@ class Subscription
     #[ORM\Column(length: 255)]
     private ?string $stripeCustomerId = null;
 
-    #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $currentPeriodStart = null;
 
-    #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $currentPeriodEnd = null;
 
     #[ORM\Column(length: 50, enumType: PlanType::class)]
