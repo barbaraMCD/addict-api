@@ -4,6 +4,7 @@ namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use App\Enum\Addiction\AddictionType;
+use App\Enum\Subscription\PlanType;
 use App\Enum\Trigger\TriggerType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -188,6 +189,8 @@ abstract class BaseApiTestCase extends ApiTestCase
 
     protected function createTrigger(string $type = null): array
     {
+        $token = $this->loginUser('user1@test.local');
+
         if(!$type) {
             $type = TriggerType::ANXIETY;
         }
@@ -199,7 +202,35 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'type' => $type
                 ],
             ],
-            $this->token
+            $token
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        return $triggerResponse->toArray();
+    }
+
+    protected function createSubscription(string $userIri = null): array
+    {
+        $token = $this->loginUser('user1@test.local');
+
+        if (!$userIri) {
+            $userRetrievedData = $this->createUser();
+            $userIri = $this->getIriFromId("users", $userRetrievedData['id']);
+        }
+        $triggerResponse = $this->postRequest(
+            TestEnum::ENDPOINT_SUBSCRIPTIONS->value,
+            [
+                'json' => [
+                    'user' => $userIri,
+                    "stripeSubscriptionId" => $this->generateRandomEmail(),
+                    "stripeCustomerId" => "23456789",
+                    "planType" => "monthly",
+                    "currentPeriodStart" => "2025-05-31 19:48:17+00",
+                    "currentPeriodEnd" => "2025-09-31 19:48:17+00"
+                ],
+            ],
+            $token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);

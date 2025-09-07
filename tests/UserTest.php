@@ -2,6 +2,9 @@
 
 namespace Tests;
 
+use App\Repository\SubscriptionRepository;
+use App\Repository\UserRepository;
+use App\Service\AuthHTTPClientService;
 use App\Tests\BaseApiTestCase;
 use App\Tests\TestEnum;
 use Symfony\Component\HttpFoundation\Response;
@@ -9,6 +12,18 @@ use Symfony\Component\HttpFoundation\Response;
 class UserTest extends BaseApiTestCase
 {
     private const PASSWORD_IN_CREATE_USER = 'fhjez76g';
+    private UserRepository $userRepository;
+    private SubscriptionRepository $subscriptionRepository;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::bootKernel();
+        $container = self::getContainer();
+        $this->userRepository = $container->get(UserRepository::class);
+        $this->subscriptionRepository = $container->get(SubscriptionRepository::class);
+    }
+
 
     public function testRegisterUser(): void
     {
@@ -20,9 +35,9 @@ class UserTest extends BaseApiTestCase
             ],
         ])->toArray();
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        $this->assertArrayHasKey('id', $response);
-        $this->assertEquals($email, $response['email']);
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED, "User registration should be successful");
+        $this->assertArrayHasKey('id', $response, "Response should contain user ID");
+        $this->assertEquals($email, $response['email'], "Registered email should match the input email");
     }
 
     public function testCannotRegisterUser(): void
@@ -47,8 +62,8 @@ class UserTest extends BaseApiTestCase
         ]);
 
         $data = $registerResponse2->toArray(false);
-        $this->assertResponseStatusCodeSame(Response::HTTP_CONFLICT);
-        $this->assertEquals("Email déjà utilisé.", $data['detail']);
+        $this->assertResponseStatusCodeSame(Response::HTTP_CONFLICT, "Registering with an existing email should fail");
+        $this->assertEquals("Email déjà utilisé.", $data['detail'], "Error message should indicate email is already in use");
     }
 
     public function testLoginUser(): void
@@ -63,9 +78,9 @@ class UserTest extends BaseApiTestCase
                 'password' => UserTest::PASSWORD_IN_CREATE_USER
             ],
         ])->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-        $this->assertArrayHasKey('token', $loginResponse);
-        $this->assertArrayHasKey('refresh_token', $loginResponse);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Login should be successful with correct credentials");
+        $this->assertArrayHasKey('token', $loginResponse, "Login response should contain a token");
+        $this->assertArrayHasKey('refresh_token', $loginResponse, "Login response should contain a refresh_token");
     }
 
     public function testCannotLoginUser(): void
@@ -82,7 +97,7 @@ class UserTest extends BaseApiTestCase
         ]);
 
         $loginResponse->toArray(false);
-        $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+        $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED, "Login should fail with incorrect password");
     }
 
     public function testRefreshTokenRoute(): void
@@ -109,8 +124,41 @@ class UserTest extends BaseApiTestCase
             ],
         ])->toArray();
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-        $this->assertArrayHasKey('token', $refreshTokenResponse);
-        $this->assertArrayHasKey('refresh_token', $refreshTokenResponse);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Refresh token request should be successful");
+        $this->assertArrayHasKey('token', $refreshTokenResponse, "Refresh token response should contain a new token");
+        $this->assertArrayHasKey('refresh_token', $refreshTokenResponse, "Refresh token response should contain a new refresh_token");
+    }
+
+    public function testDeleteUser(): void
+    {
+        $email = $this->generateRandomEmail();
+        $user = $this->createUser($email);
+        $userId = $user['id'];
+        $userIri = $this->getIriFromId("users", $userId);
+
+        $this->createSubscription($userIri);
+
+        $response = $this->deleteRequest(TESTEnum::ENDPOINT_USERS->value.'/'.$userId, [
+            'json' => [
+                'userId' => $userId,
+            ],
+        ])->toArray();
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "User deletion request should be successful");
+        $this->assertEquals('User deleted or anonymized successfully', $response['message'], "Response message should confirm deletion or anonymization");
+
+        $updatedUser = $this->userRepository->find($userId);
+
+        $this->assertNotNull($updatedUser, 'User should still exist in database');
+
+        // Check anonymized format
+        $this->assertStringStartsWith('deleted-', $updatedUser->getEmail(), "Email should be anonymized");
+        $this->assertStringEndsWith('@anonymous.local', $updatedUser->getEmail(), "Email should be anonymized");
+        $this->assertStringStartsWith('deleted-', $updatedUser->getUsername(), "Username should be anonymized");
+        $this->assertEquals('', $updatedUser->getPassword(), "Password should be cleared");
+        $this->assertEmpty($updatedUser->getAddictions(), "Addictions should be removed");
+
+        $subscription = $this->subscriptionRepository->findOneBy(['user' => $updatedUser]);
+        $this->assertNotNull($subscription, 'Subscription should still exist');
     }
 }

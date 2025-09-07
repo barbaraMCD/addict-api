@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use App\Controller\DeleteUserController;
 use App\Controller\UserController;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
@@ -43,7 +44,7 @@ use Symfony\Component\Uid\Uuid;
         new Patch(),
         new Delete(
             uriTemplate: '/users/{id}',
-            controller: UserController::class,
+            controller: DeleteUserController::class,
             name: 'delete'
         ),
     ],

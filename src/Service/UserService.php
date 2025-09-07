@@ -35,6 +35,7 @@ class UserService
 
     public function handleDeletionRequest(User $user): void
     {
+
         $subscription = $this->subscriptionRepository->findOneBy([
             'user' => $user,
         ]);
@@ -52,6 +53,10 @@ class UserService
         $user->setEmail('deleted-' . uniqid() . '@anonymous.local');
         $user->setPassword('');
         $user->setUsername('deleted-' . uniqid());
+
+        foreach ($user->getAddictions() as $addiction) {
+            $this->entityManager->remove($addiction);
+        }
     }
 
 }

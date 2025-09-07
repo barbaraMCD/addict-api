@@ -53,10 +53,10 @@ class Subscription
     #[ORM\Column(length: 255)]
     private ?string $stripeCustomerId = null;
 
-    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private ?\DateTimeImmutable $currentPeriodStart = null;
 
-    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private ?\DateTimeImmutable $currentPeriodEnd = null;
 
     #[ORM\Column(length: 50, enumType: PlanType::class)]
