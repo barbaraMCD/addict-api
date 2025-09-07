@@ -2,9 +2,8 @@
 
 namespace App\Tests;
 
-use App\Enum\AddictionEnumType;
+use App\Enum\Addiction\AddictionType;
 use Symfony\Component\HttpFoundation\Response;
-use App\Tests\BaseApiTestCase;
 
 class AddictionTest extends BaseApiTestCase
 {
@@ -21,7 +20,7 @@ class AddictionTest extends BaseApiTestCase
 
         $userIri = $this->getIriFromId("users", $user['id']);
 
-        $addiction = $this->createAddiction($userIri, AddictionEnumType::CIGARETTES->value);
+        $addiction = $this->createAddiction($userIri, AddictionType::CIGARETTES->value);
 
         $addictionIri = $addiction['@id'];
 
@@ -31,7 +30,7 @@ class AddictionTest extends BaseApiTestCase
 
         $response = [
             '@id' => $addictionIri,
-            'type' => AddictionEnumType::CIGARETTES->value,
+            'type' => AddictionType::CIGARETTES->value,
             'consumptions' => []
         ];
 

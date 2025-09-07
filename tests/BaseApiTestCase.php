@@ -3,8 +3,8 @@
 namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
-use App\Enum\AddictionEnumType;
-use App\Enum\TriggerEnumType;
+use App\Enum\Addiction\AddictionType;
+use App\Enum\Trigger\TriggerType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -129,7 +129,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $userResponse->toArray();
     }
 
-    protected function createAddiction(string $userIri = null, string $type = AddictionEnumType::CAFFEINE->value, int $totalAmount = 50): array
+    protected function createAddiction(string $userIri = null, string $type = AddictionType::CAFFEINE->value, int $totalAmount = 50): array
     {
 
         $token = $this->loginUser('user1@test.local');
@@ -189,7 +189,7 @@ abstract class BaseApiTestCase extends ApiTestCase
     protected function createTrigger(string $type = null): array
     {
         if(!$type) {
-            $type = TriggerEnumType::ANXIETY;
+            $type = TriggerType::ANXIETY;
         }
 
         $triggerResponse = $this->postRequest(

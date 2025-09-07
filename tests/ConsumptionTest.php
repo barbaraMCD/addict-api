@@ -2,10 +2,9 @@
 
 namespace App\Tests;
 
-use App\Enum\AddictionEnumType;
-use App\Enum\TriggerEnumType;
+use App\Enum\Addiction\AddictionType;
+use App\Enum\Trigger\TriggerType;
 use Symfony\Component\HttpFoundation\Response;
-use App\Tests\BaseApiTestCase;
 
 class ConsumptionTest extends BaseApiTestCase
 {
@@ -70,7 +69,7 @@ class ConsumptionTest extends BaseApiTestCase
     {
 
         $triggerAnxiety = $this->createTrigger();
-        $triggerFriends = $this->createTrigger(TriggerEnumType::FRIENDS->value);
+        $triggerFriends = $this->createTrigger(TriggerType::FRIENDS->value);
 
         $addiction = $this->createAddiction();
         $addictionIri = $addiction["@id"];
@@ -228,7 +227,7 @@ class ConsumptionTest extends BaseApiTestCase
 
     public function testDateFilterConsumption(): void
     {
-        $addiction = $this->createAddiction(null, AddictionEnumType::CLOTHES->value);
+        $addiction = $this->createAddiction(null, AddictionType::CLOTHES->value);
         $addictionIri = $addiction['@id'];
         $addictionId = $this->getIdFromObject($addiction);
 

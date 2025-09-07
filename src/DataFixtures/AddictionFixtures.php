@@ -3,7 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Addiction;
-use App\Enum\AddictionEnumType;
+use App\Enum\Addiction\AddictionType;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
@@ -24,9 +24,9 @@ class AddictionFixtures extends BaseFixtures implements DependentFixtureInterfac
             $this->getReference('USER_3'),
         ];
 
-        foreach (AddictionEnumType::cases() as $i => $case) {
+        foreach (AddictionType::cases() as $i => $case) {
             $addiction = new Addiction();
-            $addiction->setType($case->name);
+            $addiction->setType($case);
             $addiction->setUser($users[$i % count($users)]);
 
             $this->addReference('ADDICTION_'.$i, $addiction);
