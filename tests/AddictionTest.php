@@ -26,7 +26,7 @@ class AddictionTest extends BaseApiTestCase
 
         $responseRetrieved = $this->request($addictionIri, [], $this->token)->toArray();
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Addiction retrieval should be successful");
 
         $response = [
             '@id' => $addictionIri,
@@ -34,9 +34,9 @@ class AddictionTest extends BaseApiTestCase
             'consumptions' => []
         ];
 
-        $this->assertJsonContains($response);
-        $this->assertArrayHasKey("totalAmount", $responseRetrieved);
-        $this->assertArrayHasKey("status", $responseRetrieved);
+        $this->assertJsonContains($response, true, "Response should match the created addiction data");
+        $this->assertArrayHasKey("totalAmount", $responseRetrieved, "Response should contain totalAmount");
+        $this->assertArrayHasKey("status", $responseRetrieved, "Response should contain status");
     }
 
     public function testUpdateAddiction(): void
@@ -52,15 +52,15 @@ class AddictionTest extends BaseApiTestCase
                 'totalAmount' => $newAmount
             ],
         ], $this->token);
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-        $this->assertEquals($addiction['totalAmount'] + $newAmount, $addictionRetrieved['totalAmount']);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Addiction update should be successful");
+        $this->assertEquals($addiction['totalAmount'] + $newAmount, $addictionRetrieved['totalAmount'], "Total amount should be updated correctly");
     }
 
     public function testDeleteAddiction(): void
     {
         $addiction = $this->createAddiction();
         $this->deleteRequest($addiction['@id'], [], $this->token);
-        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT, "Addiction deletion should be successful");
     }
 
     public function testSearchFilterAddiction(): void
@@ -72,7 +72,7 @@ class AddictionTest extends BaseApiTestCase
         $addictionIri = $addiction['@id'];
 
         $responseRetrieved = $this->request(TestEnum::ENDPOINT_ADDICTIONS->value."?user.id=". $user['id'], [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Addiction search filter by user should be successful");
 
         $response = [
             'hydra:member' => [[
@@ -82,12 +82,12 @@ class AddictionTest extends BaseApiTestCase
             ]]
         ];
 
-        $this->assertJsonContains($response);
+        $this->assertJsonContains($response, true, "Response should match the created addiction data");
 
         $member = $responseRetrieved['hydra:member'][0];
 
-        $this->assertArrayHasKey('totalAmount', $member);
-        $this->assertArrayHasKey('type', $member);
-        $this->assertArrayHasKey('consumptions', $member);
+        $this->assertArrayHasKey('totalAmount', $member, "Addiction should have a totalAmount field");
+        $this->assertArrayHasKey('type', $member, "Addiction should have a type field");
+        $this->assertArrayHasKey('consumptions', $member, "Addiction should have a consumptions field");
     }
 }

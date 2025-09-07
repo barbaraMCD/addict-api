@@ -25,7 +25,7 @@ class ConsumptionTest extends BaseApiTestCase
 
         $this->request($consumptionIri, [], $this->token)->toArray();
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Consumption retrieval should be successful");
 
         $response = [
             '@id' => $consumptionIri,
@@ -39,7 +39,7 @@ class ConsumptionTest extends BaseApiTestCase
         ];
 
 
-        $this->assertJsonContains($response);
+        $this->assertJsonContains($response, true, "Response should match the created consumption data");
     }
 
     public function testUpdateConsumption(): void
@@ -54,15 +54,15 @@ class ConsumptionTest extends BaseApiTestCase
                 'comment' => $comment
             ],
         ], $this->token);
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-        $this->assertEquals($comment, $ConsumptionRetrieved['comment']);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Consumption update should be successful");
+        $this->assertEquals($comment, $ConsumptionRetrieved['comment'], "Comment should be updated correctly");
     }
 
     public function testDeleteConsumption(): void
     {
         $consumption = $this->createConsumption();
         $this->deleteRequest($consumption['@id'], [], $this->token);
-        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT, "Consumption deletion should be successful");
     }
 
     public function testAddTriggersConsumption(): void
@@ -88,7 +88,7 @@ class ConsumptionTest extends BaseApiTestCase
             $this->token
         )->toArray();
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED, "Consumption creation with triggers should be successful");
 
         $response = [
             'addiction' => $addictionIri,
@@ -98,8 +98,7 @@ class ConsumptionTest extends BaseApiTestCase
             ],
         ];
 
-
-        $this->assertJsonContains($response);
+        $this->assertJsonContains($response, true, "Response should match the created consumption with triggers");
     }
 
     public function testUpdateConsumptionIfAlreadyExistsToday(): void
@@ -118,12 +117,12 @@ class ConsumptionTest extends BaseApiTestCase
         $consumptionIri = $consumption['@id'];
 
         $this->request($consumptionIri, [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "First consumption retrieval should be successful");
 
         $consumptionTwo = $this->createConsumption($addictionIri);
 
         $this->request($consumptionIri, [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Second consumption retrieval should be successful and update the quantity");
 
         $response = [
             '@id' => $consumptionIri,
@@ -136,7 +135,7 @@ class ConsumptionTest extends BaseApiTestCase
             'triggers' => [],
         ];
 
-        $this->assertJsonContains($response);
+        $this->assertJsonContains($response, true, "Response should reflect the updated quantity for today's consumption");
 
     }
 
@@ -154,7 +153,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumptionIri = $consumption['@id'];
 
         $this->request($consumptionIri, [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "First consumption retrieval should be successful");
 
         $addictionTwo = $this->createAddiction();
         $addictionTwoIri = $addictionTwo["@id"];
@@ -163,7 +162,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumptionTwoIri = $consumptionTwo['@id'];
 
         $this->request($consumptionIri, [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Second consumption retrieval should be successful for the second user");
 
         $response = [
             '@id' => $consumptionIri,
@@ -176,10 +175,10 @@ class ConsumptionTest extends BaseApiTestCase
             'triggers' => [],
         ];
 
-        $this->assertJsonContains($response);
+        $this->assertJsonContains($response, "Response should match the first user's consumption data");
 
         $this->request($consumptionTwoIri, [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Second consumption retrieval should be successful for the second user");
 
         $response = [
             '@id' => $consumptionTwoIri,
@@ -192,7 +191,7 @@ class ConsumptionTest extends BaseApiTestCase
             'triggers' => [],
         ];
 
-        $this->assertJsonContains($response);
+        $this->assertJsonContains($response, true, "Response should match the second user's consumption data");
     }
 
     public function testSearchFilterConsumption(): void
@@ -207,7 +206,7 @@ class ConsumptionTest extends BaseApiTestCase
         $consumptionIri = $consumption['@id'];
 
         $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.user.id='. $user['id'], [], $this->token)->toArray();
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Consumption search by user's addiction should be successful");
 
         $response = [
             'hydra:member' => [[
@@ -220,9 +219,9 @@ class ConsumptionTest extends BaseApiTestCase
 
         $member = $responseRetrieved['hydra:member'][0];
 
-        $this->assertArrayHasKey('quantity', $member);
-        $this->assertArrayHasKey('addiction', $member);
-        $this->assertArrayHasKey('triggers', $member);
+        $this->assertArrayHasKey('quantity', $member, "Consumption should have a quantity field");
+        $this->assertArrayHasKey('addiction', $member, "Consumption should have an addiction field");
+        $this->assertArrayHasKey('triggers', $member, "Consumption should have a triggers field");
     }
 
     public function testDateFilterConsumption(): void
@@ -236,9 +235,9 @@ class ConsumptionTest extends BaseApiTestCase
 
         $responseRetrieved = $this->request(TestEnum::ENDPOINT_CONSUMPTIONS->value.'?addiction.id='.$addictionId."&date[after]=" . (new \DateTimeImmutable('today'))->format('Y-m-d'), [], $this->token)->toArray();
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
-        $this->assertEquals(1, $responseRetrieved['hydra:totalItems']);
-        $this->assertEquals($todayConsumption["date"], $responseRetrieved['hydra:member'][0]['date']);
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK, "Consumption search by date filter should be successful");
+        $this->assertEquals(1, $responseRetrieved['hydra:totalItems'], "There should be exactly one consumption for today");
+        $this->assertEquals($todayConsumption["date"], $responseRetrieved['hydra:member'][0]['date'], "The consumption date should match today's date");
     }
 
 }
