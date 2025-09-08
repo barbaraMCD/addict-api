@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use App\Enum\Trigger\TriggerType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -40,9 +41,9 @@ class Trigger
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     private ?Uuid $id;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, enumType: TriggerType::class)]
     #[Groups(['trigger:item:read'])]
-    private ?string $type = null;
+    private ?TriggerType $type = null;
 
     /**
      * @var Collection<int, Consumption>
@@ -61,12 +62,12 @@ class Trigger
         return $this->id;
     }
 
-    public function getType(): ?string
+    public function getType(): ?TriggerType
     {
         return $this->type;
     }
 
-    public function setType(string $type): static
+    public function setType(TriggerType $type): static
     {
         $this->type = $type;
 

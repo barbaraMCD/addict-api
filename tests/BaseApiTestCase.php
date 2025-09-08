@@ -3,8 +3,9 @@
 namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
-use App\Enum\AddictionEnumType;
-use App\Enum\TriggerEnumType;
+use App\Enum\Addiction\AddictionType;
+use App\Enum\Subscription\PlanType;
+use App\Enum\Trigger\TriggerType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -129,7 +130,7 @@ abstract class BaseApiTestCase extends ApiTestCase
         return $userResponse->toArray();
     }
 
-    protected function createAddiction(string $userIri = null, string $type = AddictionEnumType::CAFFEINE->value, int $totalAmount = 50): array
+    protected function createAddiction(string $userIri = null, string $type = AddictionType::CAFFEINE->value, int $totalAmount = 50): array
     {
 
         $token = $this->loginUser('user1@test.local');
@@ -188,8 +189,10 @@ abstract class BaseApiTestCase extends ApiTestCase
 
     protected function createTrigger(string $type = null): array
     {
+        $token = $this->loginUser('user1@test.local');
+
         if(!$type) {
-            $type = TriggerEnumType::ANXIETY;
+            $type = TriggerType::ANXIETY;
         }
 
         $triggerResponse = $this->postRequest(
@@ -199,7 +202,35 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'type' => $type
                 ],
             ],
-            $this->token
+            $token
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        return $triggerResponse->toArray();
+    }
+
+    protected function createSubscription(string $userIri = null, string $currentPeriodEnd = "2026-05-31 19:48:17+00"): array
+    {
+        $token = $this->loginUser('user1@test.local');
+
+        if (!$userIri) {
+            $userRetrievedData = $this->createUser();
+            $userIri = $this->getIriFromId("users", $userRetrievedData['id']);
+        }
+        $triggerResponse = $this->postRequest(
+            TestEnum::ENDPOINT_SUBSCRIPTIONS->value,
+            [
+                'json' => [
+                    'user' => $userIri,
+                    "stripeSubscriptionId" => $this->generateRandomEmail(),
+                    "stripeCustomerId" => "23456789",
+                    "planType" => "monthly",
+                    "currentPeriodStart" => "2025-05-31 19:48:17+00",
+                    "currentPeriodEnd" => $currentPeriodEnd
+                ],
+            ],
+            $token
         );
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);

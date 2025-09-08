@@ -11,7 +11,8 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Entity\Trait\TimestampableTrait;
-use App\Enum\AddictionEnumStatus;
+use App\Enum\Addiction\Status;
+use App\Enum\Addiction\AddictionType;
 use App\Repository\AddictionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -52,15 +53,15 @@ class Addiction
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     private ?Uuid $id;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, enumType: AddictionType::class)]
     #[Groups(['addiction:item:read', 'addiction:consumption:read'])]
-    private ?string $type = null;
+    private ?AddictionType $type = null;
 
-    #[ORM\Column(length: 100, options: ['default' => AddictionEnumStatus::ACTIVE])]
+    #[ORM\Column(length: 100, enumType: Status::class, options: ['default' => Status::ACTIVE])]
     #[Groups(['addiction:item:read'])]
-    private string $status;
+    private Status $status = Status::ACTIVE;
 
-    #[ORM\Column]
+    #[ORM\Column(length: 10)]
     #[Groups(['addiction:item:read'])]
     private float $totalAmount = 0;
 
@@ -73,12 +74,11 @@ class Addiction
     #[MaxDepth(1)]
     private Collection $consumptions;
 
-    public function __construct(string $status = AddictionEnumStatus::ACTIVE->value)
+    public function __construct()
     {
         $this->id = Uuid::v7();
         $this->totalAmount = 0.0;
         $this->consumptions = new ArrayCollection();
-        $this->status = $status;
     }
 
     public function getId(): ?string
@@ -86,24 +86,24 @@ class Addiction
         return $this->id;
     }
 
-    public function getType(): ?string
+    public function getType(): ?AddictionType
     {
         return $this->type;
     }
 
-    public function setType(string $type): static
+    public function setType(AddictionType $type): static
     {
         $this->type = $type;
 
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): ?Status
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(Status $status): static
     {
         $this->status = $status;
 

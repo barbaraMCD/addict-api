@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use App\Controller\DeleteUserController;
 use App\Controller\UserController;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
@@ -41,7 +42,11 @@ use Symfony\Component\Uid\Uuid;
             name: 'register'
         ),
         new Patch(),
-        new Delete(),
+        new Delete(
+            uriTemplate: '/users/{id}',
+            controller: DeleteUserController::class,
+            name: 'delete'
+        ),
     ],
     mercure: true
 )]
@@ -55,14 +60,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     private ?Uuid $id;
 
-    #[ORM\Column(length: 180, unique: true)]
+    #[ORM\Column(length: 180, unique: true, nullable: true)]
     #[Groups(['user:item:read'])]
     private ?string $email = null;
 
     /**
      * @var string The hashed password
      */
-    #[ORM\Column(length: 180, nullable: false)]
+    #[ORM\Column(length: 180, nullable: true)]
     private ?string $password = null;
 
     #[ORM\Column(length: 255, nullable: true)]

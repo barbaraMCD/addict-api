@@ -4,11 +4,10 @@ Welcome to my project, the goal is to track bad habits and help you to get rid o
 
 # INSTALLATION
 
-To run this project u can use the following command from the Makefile:
+To run this project u can use the following command (from the Makefile):
 
 ```
 make install
-make lol
 make run
 ```
 
@@ -30,4 +29,11 @@ make test
 | ADMINER    | 8080 | app         | addict   |
 
 
+# ROUTING
 
+To see all routes use the following command:
+
+```
+make cli
+bin/console debug:router
+```
