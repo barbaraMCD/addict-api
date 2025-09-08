@@ -4,7 +4,6 @@ namespace Tests;
 
 use App\Repository\SubscriptionRepository;
 use App\Repository\UserRepository;
-use App\Service\AuthHTTPClientService;
 use App\Tests\BaseApiTestCase;
 use App\Tests\TestEnum;
 use Symfony\Component\HttpFoundation\Response;

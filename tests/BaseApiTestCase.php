@@ -4,7 +4,6 @@ namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use App\Enum\Addiction\AddictionType;
-use App\Enum\Subscription\PlanType;
 use App\Enum\Trigger\TriggerType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
