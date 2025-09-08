@@ -185,7 +185,7 @@ class UserTest extends BaseApiTestCase
                 'userId' => $userId,
             ],
         ],
-        )->toArray();
+        )->toArray(false);
 
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED, "User deletion without auth should fail");
 
