@@ -29,7 +29,7 @@ security:
                 check_path: /api/token/refresh
 
         api:
-            pattern: ^/api
+            pattern: ^/(users|addictions|consumptions|subscriptions|triggers)
             stateless: true
             jwt: ~
 
@@ -50,7 +50,10 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api/*, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/(users|addictions|consumptions|subscriptions|triggers), roles: ROLE_USER }
 
 when@test:
     security:

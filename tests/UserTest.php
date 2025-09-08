@@ -131,6 +131,8 @@ class UserTest extends BaseApiTestCase
 
     public function testDeleteUser(): void
     {
+        $token = $this->loginUser('user1@test.local');
+
         $email = $this->generateRandomEmail();
         $user = $this->createUser($email);
         $userId = $user['id'];
@@ -138,11 +140,15 @@ class UserTest extends BaseApiTestCase
 
         $this->createSubscription($userIri);
 
-        $response = $this->deleteRequest(TESTEnum::ENDPOINT_USERS->value.'/'.$userId, [
+        $response = $this->deleteRequest(
+            TESTEnum::ENDPOINT_USERS->value.'/'.$userId,
+            [
             'json' => [
                 'userId' => $userId,
             ],
-        ])->toArray();
+        ],
+            $token
+        )->toArray();
 
         $this->assertResponseStatusCodeSame(Response::HTTP_OK, "User deletion request should be successful");
         $this->assertEquals('User deleted or anonymized successfully', $response['message'], "Response message should confirm deletion or anonymization");
@@ -160,5 +166,28 @@ class UserTest extends BaseApiTestCase
 
         $subscription = $this->subscriptionRepository->findOneBy(['user' => $updatedUser]);
         $this->assertNotNull($subscription, 'Subscription should still exist');
+    }
+
+    public function testCannotDeleteUserBecauseNoAuth(): void
+    {
+
+        $email = $this->generateRandomEmail();
+        $user = $this->createUser($email);
+        $userId = $user['id'];
+        $userIri = $this->getIriFromId("users", $userId);
+
+        $this->createSubscription($userIri);
+
+        $this->deleteRequest(
+            TESTEnum::ENDPOINT_USERS->value.'/'.$userId,
+            [
+            'json' => [
+                'userId' => $userId,
+            ],
+        ],
+        )->toArray();
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED, "User deletion without auth should fail");
+
     }
 }
