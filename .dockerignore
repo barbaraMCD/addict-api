@@ -26,6 +26,4 @@ docs/
 public/bundles/
 var/
 .editorconfig
-.env.*.local
-.env.local
 .env.local.php

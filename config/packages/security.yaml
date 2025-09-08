@@ -53,6 +53,7 @@ security:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
+        - { path: ^/stripe/webhook, roles: PUBLIC_ACCESS }
         - { path: ^/(users|addictions|consumptions|subscriptions|triggers), roles: ROLE_USER }
 
 when@test:
