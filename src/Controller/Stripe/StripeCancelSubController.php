@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Stripe;
 
+use Stripe\Subscription as StripeSubscription;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Stripe\Subscription as StripeSubscription;
 
 class StripeCancelSubController extends AbstractController
 {

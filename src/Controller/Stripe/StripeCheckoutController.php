@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Stripe;
 
 use Psr\Log\LoggerInterface;
+use Stripe\BillingPortal\Session as BillingSession;
+use Stripe\Checkout\Session;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Price;
+use Stripe\Stripe;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Stripe\Stripe;
-use Stripe\Checkout\Session;
-use Stripe\Price;
-use Stripe\Exception\ApiErrorException;
-use Stripe\BillingPortal\Session as BillingSession;
 
 class StripeCheckoutController extends AbstractController
 {

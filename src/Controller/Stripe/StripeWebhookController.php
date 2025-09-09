@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Stripe;
 
 use App\Entity\Subscription;
 use App\Enum\Subscription\PlanType;
@@ -9,15 +9,15 @@ use App\Repository\UserRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Stripe\Checkout\Session;
 use Stripe\Invoice;
+use Stripe\Stripe;
+use Stripe\Subscription as StripeSubscription;
+use Stripe\Webhook;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Stripe\Stripe;
-use Stripe\Webhook;
-use Stripe\Checkout\Session;
-use Stripe\Subscription as StripeSubscription;
 
 class StripeWebhookController extends AbstractController
 {
