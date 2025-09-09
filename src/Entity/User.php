@@ -11,7 +11,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Controller\DeleteUserController;
-use App\Controller\UserController;
+use App\Controller\RegisterController;
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -38,7 +38,7 @@ use Symfony\Component\Uid\Uuid;
         ),
         new Post(
             uriTemplate: '/api/register',
-            controller: UserController::class,
+            controller: RegisterController::class,
             name: 'register'
         ),
         new Patch(),
