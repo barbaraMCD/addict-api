@@ -6,8 +6,10 @@ use App\Entity\Subscription;
 use App\Enum\Subscription\PlanType;
 use App\Repository\SubscriptionRepository;
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Stripe\Invoice;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Stripe\Stripe;
 use App\Entity\User;
 use Stripe\Webhook;
+use Stripe\Checkout\Session;
 use Stripe\Subscription as StripeSubscription;
 
 class StripeWebhookController extends AbstractController
@@ -30,11 +33,11 @@ class StripeWebhookController extends AbstractController
         Stripe::setApiKey($this->stripeSecretKey);
     }
 
-    #[Route('/stripe/webhook', name: 'stripe_webhook', methods: ['POST'])]
+    #[Route('/api/stripe/webhook', name: 'stripe_webhook', methods: ['POST'])]
     public function handleWebhook(Request $request): Response
     {
 
-        // TODO stripe listen --forward-to localhost:8000/stripe/webhook
+        // TODO stripe listen --forward-to localhost:8000/api/stripe/webhook
         // TODO stripe trigger customer.subscription.updated
         // TODO add stripe variables in .env
 
@@ -52,11 +55,8 @@ class StripeWebhookController extends AbstractController
         }
 
         switch ($event->type) {
-            case 'customer.subscription.created':
-                $this->handleSubscriptionCreated($event->data->object);
-                break;
-            case 'customer.subscription.updated':
-                $this->handleSubscriptionUpdated($event->data->object);
+            case 'checkout.session.completed':
+                $this->handleSessionCompleted($event->data->object);
                 break;
                 /*case 'customer.subscription.deleted':
                     $this->handleSubscriptionDeleted($event->data->object);
@@ -71,16 +71,14 @@ class StripeWebhookController extends AbstractController
         return new Response('OK', Response::HTTP_OK);
     }
 
-    private function handleSubscriptionCreated(StripeSubscription $stripeSubscription): void
+    private function handleSessionCompleted(Session $session): void
     {
         try {
+            $this->logger->error("metadata : ". $session->metadata);
+            $userId = $session->metadata->user_id;
+            $user = $this->userRepository->find($userId);
 
-            $user = $this->findUserByStripeCustomerId($stripeSubscription->customer);
-
-            if (!$user) {
-                $this->logger->error('User not found for customer: ' . $stripeSubscription->customer);
-                return;
-            }
+            $stripeSubscription = StripeSubscription::retrieve($session->subscription);
 
             $subscription = new Subscription();
             $subscription->setUser($user);
@@ -101,39 +99,16 @@ class StripeWebhookController extends AbstractController
 
             $this->logger->error('Subscription created successfully: ' . $subscription->getId());
         } catch (\Exception $e) {
+            if ($e instanceof UniqueConstraintViolationException) {
+                $this->logger->error('Duplicate subscription, skipping');
+                return;
+            }
             $this->logger->error('Failed to create subscription: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    private function handleSubscriptionUpdated(StripeSubscription $stripeSubscription): void
-    {
-        try {
-            $subscription = $this->subscriptionRepository->findOneBy([
-            'stripeSubscriptionId' => $stripeSubscription->id
-            ]);
-
-            if (!$subscription) {
-                $this->logger->error('Subscription not found: ' . $stripeSubscription->id);
-                return;
-            }
-
-            $subscription->setCurrentPeriodStart(
-                \DateTimeImmutable::createFromFormat('U', $stripeSubscription->items->data[0]->current_period_start)
-            );
-            $subscription->setCurrentPeriodEnd(
-                \DateTimeImmutable::createFromFormat('U', $stripeSubscription->items->data[0]->current_period_end)
-            );
-
-            $this->entityManager->flush();
-            $this->logger->error('Subscription updated successfully: ' . $subscription->getId());
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to update subscription: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    private function handleSubscriptionDeleted(\Stripe\Subscription $stripeSubscription): void
+    private function handleSubscriptionDeleted(StripeSubscription $stripeSubscription): void
     {
         $subscription = $this->subscriptionRepository->findOneBy([
             'stripeSubscriptionId' => $stripeSubscription->id
@@ -145,7 +120,7 @@ class StripeWebhookController extends AbstractController
         }
     }
 
-    private function handleInvoicePaymentSucceeded(\Stripe\Invoice $stripeInvoice): void
+    private function handleInvoicePaymentSucceeded(Invoice $stripeInvoice): void
     {
         // Create receipt logic here
         $subscription = $this->subscriptionRepository->findOneBy([
@@ -161,15 +136,10 @@ class StripeWebhookController extends AbstractController
         }
     }
 
-    private function findUserByStripeCustomerId(string $stripeCustomerId): ?User
-    {
-        // TODO : Implement stripe customer id
-        return $this->userRepository->findAll()[0] ?? null;
-    }
-
     private function determinePlanType(StripeSubscription $stripeSubscription): PlanType
     {
         $interval = $stripeSubscription->items->data[0]->price->recurring->interval;
+        $this->logger->error("interval : " . $interval);
 
         return match($interval) {
             'month' => PlanType::MONTHLY,

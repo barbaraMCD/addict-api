@@ -22,7 +22,7 @@ down: ## Delete the Docker containers and volumes
 	$(DOCKER_COMPOSE) down -v
 
 logs: ## Log the Docker containers
-	$(DOCKER_COMPOSE) logs --tail=10 -f api | grep ERROR
+	$(DOCKER_COMPOSE) logs --tail=10 -f api | grep "500\|ERROR\|CRITICAL"
 
 fixtures: ## seed the database with core data
 	$(DOCKER_COMPOSE) run --rm api php -d memory_limit=-1 bin/console doctrine:fixtures:load --no-interaction --purge-with-truncate

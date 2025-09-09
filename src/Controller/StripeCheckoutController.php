@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,7 +16,7 @@ use Stripe\BillingPortal\Session as BillingSession;
 
 class StripeCheckoutController extends AbstractController
 {
-    public function __construct(private string $stripeSecretKey)
+    public function __construct(private string $stripeSecretKey, private LoggerInterface $logger)
     {
         Stripe::setApiKey($this->stripeSecretKey);
     }
@@ -31,6 +32,12 @@ class StripeCheckoutController extends AbstractController
         }
 
         try {
+            $user = $this->getUser();
+
+            if (!$user) {
+                return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+            }
+
             $prices = Price::all([
                 'lookup_keys' => [$lookupKey],
                 'expand' => ['data.product']
@@ -48,6 +55,12 @@ class StripeCheckoutController extends AbstractController
                 'mode' => 'subscription',
                 'success_url' => $_ENV['FRONTEND_URL'] . '/success?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $_ENV['FRONTEND_URL'] . '/cancel',
+                'subscription_data' => [
+                    'trial_period_days' => 7,
+                ],
+                'metadata' => [
+                    'user_id' => $user->getId(),
+                ],
             ]);
 
             return new JsonResponse([
@@ -59,7 +72,7 @@ class StripeCheckoutController extends AbstractController
         }
     }
 
-    #[Route('/api/stripe/create-portal-session', name: 'stripe_create_portal', methods: ['POST'])]
+    #[Route('/stripe/create-portal-session', name: 'stripe_create_portal', methods: ['POST'])]
     public function createPortalSession(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

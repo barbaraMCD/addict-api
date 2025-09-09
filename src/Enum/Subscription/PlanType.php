@@ -4,6 +4,6 @@ namespace App\Enum\Subscription;
 
 enum PlanType: string
 {
-    case MONTHLY = 'monthly';
-    case ANNUAL = 'annual';
+    case MONTHLY = 'premium_monthly';
+    case ANNUAL = 'premium_annual';
 }
