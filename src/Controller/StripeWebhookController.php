@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Stripe\Stripe;
-use App\Entity\User;
 use Stripe\Webhook;
 use Stripe\Checkout\Session;
 use Stripe\Subscription as StripeSubscription;
@@ -58,16 +57,12 @@ class StripeWebhookController extends AbstractController
             case 'checkout.session.completed':
                 $this->handleSessionCompleted($event->data->object);
                 break;
-                /*case 'customer.subscription.deleted':
-                    $this->handleSubscriptionDeleted($event->data->object);
-                    break;
-                case 'invoice.payment_succeeded':
-                    $this->handleInvoicePaymentSucceeded($event->data->object);
-                    break;*/
+            case 'invoice.payment_succeeded':
+                $this->handleInvoicePaymentSucceeded($event->data->object);
+                break;
             default:
                 break;
         }
-
         return new Response('OK', Response::HTTP_OK);
     }
 
@@ -108,31 +103,25 @@ class StripeWebhookController extends AbstractController
         }
     }
 
-    private function handleSubscriptionDeleted(StripeSubscription $stripeSubscription): void
-    {
-        $subscription = $this->subscriptionRepository->findOneBy([
-            'stripeSubscriptionId' => $stripeSubscription->id
-        ]);
-
-        if ($subscription) {
-            $this->entityManager->remove($subscription);
-            $this->entityManager->flush();
-        }
-    }
-
     private function handleInvoicePaymentSucceeded(Invoice $stripeInvoice): void
     {
-        // Create receipt logic here
         $subscription = $this->subscriptionRepository->findOneBy([
             'stripeSubscriptionId' => $stripeInvoice->subscription
         ]);
 
         if ($subscription) {
-            // Create Receipt entity here
-            // $receipt = new Receipt();
-            // $receipt->setSubscription($subscription);
-            // $receipt->setAmount($stripeInvoice->amount_paid / 100);
-            // etc.
+            $stripeSubscription = StripeSubscription::retrieve($stripeInvoice->subscription);
+
+            $subscription->setCurrentPeriodStart(
+                new \DateTimeImmutable('@' . $stripeSubscription->items->data[0]->current_period_start)
+            );
+            $subscription->setCurrentPeriodEnd(
+                new \DateTimeImmutable('@' . $stripeSubscription->items->data[0]->current_period_end)
+            );
+
+            $this->entityManager->flush();
+
+            $this->logger->error('Subscription period updated: ' . $subscription->getId());
         }
     }
 
