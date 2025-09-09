@@ -20,11 +20,11 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    App\Controller\StripeCheckoutController:
+    App\Controller\Stripe\StripeCheckoutController:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
 
-    App\Controller\StripeWebhookController:
+    App\Controller\Stripe\StripeWebhookController:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
             $stripeWebhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
