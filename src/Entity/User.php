@@ -78,10 +78,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:item:read'])]
     private Collection $addictions;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Subscription::class)]
+    #[Groups(['user:item:read'])]
+    private Collection $subscriptions;
+
     public function __construct()
     {
         $this->id = Uuid::v7();
         $this->addictions = new ArrayCollection();
+        $this->subscriptions = new ArrayCollection();
     }
 
     public function getId(): ?string
@@ -152,6 +157,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Subscription>
+     */
+    public function getSubscriptions(): Collection
+    {
+        return $this->subscriptions;
+    }
+
+    #[Groups(['user:item:read'])]
+    public function getActiveSubscription(): ?Subscription
+    {
+        return $this->subscriptions->filter(
+            fn (Subscription $subscription) => $subscription->isActive()
+        )->first() ?: null;
     }
 
     public function getRoles(): array

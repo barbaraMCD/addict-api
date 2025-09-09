@@ -72,7 +72,9 @@ class StripeCheckoutController extends AbstractController
         }
     }
 
-    #[Route('/stripe/create-portal-session', name: 'stripe_create_portal', methods: ['POST'])]
+    // route for users , interface to manage stripe account, invoice ...
+
+    /*#[Route('/stripe/create-portal-session', name: 'stripe_create_portal', methods: ['POST'])]
     public function createPortalSession(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -96,5 +98,5 @@ class StripeCheckoutController extends AbstractController
         } catch (ApiErrorException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
-    }
+    }*/
 }

@@ -24,6 +24,10 @@ services:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
 
+    App\Controller\Stripe\StripeCancelSubController:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+
     App\Controller\Stripe\StripeWebhookController:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'

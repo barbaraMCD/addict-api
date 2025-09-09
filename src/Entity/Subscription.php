@@ -8,7 +8,6 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
 use App\Entity\Filter\ActiveSubscriptionFilter;
 use App\Entity\Filter\NonAnonymizedUserFilter;
 use App\Entity\Trait\TimestampableTrait;
