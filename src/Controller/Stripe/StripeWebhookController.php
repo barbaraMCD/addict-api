@@ -103,14 +103,25 @@ class StripeWebhookController extends AbstractController
         }
     }
 
+    // TODO VOIR COMMENT TESTER CETTE FONCTION
     private function handleInvoicePaymentSucceeded(Invoice $stripeInvoice): void
     {
-        $subscription = $this->subscriptionRepository->findOneBy([
-            'stripeSubscriptionId' => $stripeInvoice->subscription
-        ]);
+        try {
+            $stripeSubscriptionId = $stripeInvoice->lines->data[0]->parent->subscription_item_details->subscription;
 
-        if ($subscription) {
-            $stripeSubscription = StripeSubscription::retrieve($stripeInvoice->subscription);
+            $subscription = $this->subscriptionRepository->findOneBy([
+                'stripeSubscriptionId' => $stripeSubscriptionId
+            ]);
+
+            if (!$subscription) {
+                $this->logger->error('Subscription not found: ' . $stripeSubscriptionId);
+                return;
+            }
+
+            $stripeSubscription = StripeSubscription::retrieve($stripeSubscriptionId);
+
+            $this->logger->error("subscription id: " . $subscription->getStripeCustomerId());
+            $this->logger->error("subscription date start: " . $stripeSubscription->current_period_start);
 
             $subscription->setCurrentPeriodStart(
                 new \DateTimeImmutable('@' . $stripeSubscription->items->data[0]->current_period_start)
@@ -122,6 +133,9 @@ class StripeWebhookController extends AbstractController
             $this->entityManager->flush();
 
             $this->logger->error('Subscription period updated: ' . $subscription->getId());
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error handling invoice payment: ' . $e->getMessage());
         }
     }
 

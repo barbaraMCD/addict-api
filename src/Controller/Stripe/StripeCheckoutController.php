@@ -2,8 +2,6 @@
 
 namespace App\Controller\Stripe;
 
-use Psr\Log\LoggerInterface;
-use Stripe\BillingPortal\Session as BillingSession;
 use Stripe\Checkout\Session;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Price;
@@ -16,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class StripeCheckoutController extends AbstractController
 {
-    public function __construct(private string $stripeSecretKey, private LoggerInterface $logger)
+    public function __construct(private string $stripeSecretKey)
     {
         Stripe::setApiKey($this->stripeSecretKey);
     }
