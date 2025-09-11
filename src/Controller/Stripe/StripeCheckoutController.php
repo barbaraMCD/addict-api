@@ -53,9 +53,6 @@ class StripeCheckoutController extends AbstractController
                 'mode' => 'subscription',
                 'success_url' => $_ENV['FRONTEND_URL'] . '/success?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $_ENV['FRONTEND_URL'] . '/cancel',
-                'subscription_data' => [
-                    'trial_period_days' => 7,
-                ],
                 'metadata' => [
                     'user_id' => $user->getId(),
                 ],
