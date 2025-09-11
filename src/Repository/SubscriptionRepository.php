@@ -45,4 +45,15 @@ class SubscriptionRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findSubscriptionByUserEmail(string $email): ?Subscription
+    {
+        return $this->createQueryBuilder('s')
+            ->join('s.user', 'u')
+            ->andWhere('u.email = :email')
+            ->setParameter('email', $email)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
 }

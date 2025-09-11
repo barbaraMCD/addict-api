@@ -6,6 +6,8 @@ env:
   TEST_IMAGE_NAME: ${{ secrets.TEST_IMAGE_NAME }}
   PROD_IMAGE_NAME: ${{ secrets.PROD_IMAGE_NAME }}
   JWT_PASSPHRASE: ${{ secrets.JWT_PASSPHRASE }}
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
 
 jobs:
   lint:
@@ -92,6 +94,15 @@ jobs:
             sleep 1
           done
 
+      - name: Setup Stripe CLI
+        run: |
+          curl -L "https://github.com/stripe/stripe-cli/releases/latest/download/stripe_linux_x86_64.tar.gz" -o stripe.tar.gz
+          tar -xzf stripe.tar.gz
+          sudo mv stripe /usr/local/bin/
+          stripe login --api-key ${{ secrets.STRIPE_SECRET_KEY }}
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+
       - name: Debug final setup (if tests fail)
         if: failure()
         run: |
@@ -112,6 +123,8 @@ jobs:
             --network host \
             -e APP_ENV=test \
             -e DATABASE_URL="postgresql://app:addict@localhost:5432/addict" \
+            -e STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+            -e STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
             ${{ env.TEST_IMAGE_NAME }} \
             sh -c "
               php bin/console doctrine:database:drop --force --env=test || true &&
