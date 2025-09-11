@@ -4,6 +4,7 @@ namespace App\Tests;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
 use App\Enum\Addiction\AddictionType;
+use App\Enum\Subscription\PlanType;
 use App\Enum\Trigger\TriggerType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -224,7 +225,7 @@ abstract class BaseApiTestCase extends ApiTestCase
                     'user' => $userIri,
                     "stripeSubscriptionId" => $this->generateRandomEmail(),
                     "stripeCustomerId" => "23456789",
-                    "planType" => "monthly",
+                    "planType" => PlanType::MONTHLY,
                     "currentPeriodStart" => "2025-05-31 19:48:17+00",
                     "currentPeriodEnd" => $currentPeriodEnd
                 ],

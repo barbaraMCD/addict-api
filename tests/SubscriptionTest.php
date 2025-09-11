@@ -80,10 +80,10 @@ class SubscriptionTest extends BaseApiTestCase
         $this->deleteRequest(
             TESTEnum::ENDPOINT_USERS->value.'/'.$user['id'],
             [
-            'json' => [
-                'userId' => $user['id'],
+                'json' => [
+                    'userId' => $user['id'],
+                ],
             ],
-        ],
             $this->token
         )->toArray();
 
